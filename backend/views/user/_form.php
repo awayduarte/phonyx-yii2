@@ -12,42 +12,22 @@ use yii\widgets\ActiveForm;
 
     <?php $form = ActiveForm::begin(); ?>
 
-    <!-- Email -->
     <?= $form->field($model, 'email')->textInput(['maxlength' => true]) ?>
 
-    <!-- Username -->
     <?= $form->field($model, 'username')->textInput(['maxlength' => true]) ?>
 
-    <!-- Display name -->
+    <?= $form->field($model, 'password_hash')->textInput(['maxlength' => true]) ?>
+
     <?= $form->field($model, 'display_name')->textInput(['maxlength' => true]) ?>
 
-    <!-- Password -->
-    <?= $form->field($model, 'password_plain')
-        ->passwordInput(['maxlength' => true])
-        ->hint($model->isNewRecord
-            ? 'Introduz uma password.'
-            : 'Deixa vazio para manter a password atual.'
-        ) ?>
+    <?= $form->field($model, 'status')->textInput() ?>
 
-    <!-- Role -->
-    <?= $form->field($model, 'role')->dropDownList([
-        'admin'  => 'Admin',
-        'artist' => 'Artist',
-        'user'   => 'User',
-    ], ['prompt' => 'Escolhe um role']) ?>
+    <?= $form->field($model, 'created_at')->textInput() ?>
 
-    <!-- Status -->
-    <?= $form->field($model, 'status')->dropDownList([
-        0 => 'ACTIVE',
-        1 => 'SUSPENDED',
-        2 => 'DELETED',
-    ]) ?>
+    <?= $form->field($model, 'updated_at')->textInput() ?>
 
-    <div class="form-group mt-3">
-        <?= Html::submitButton(
-            $model->isNewRecord ? 'Create' : 'Update',
-            ['class' => 'btn btn-success']
-        ) ?>
+    <div class="form-group">
+        <?= Html::submitButton(Yii::t('app', 'Save'), ['class' => 'btn btn-success']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>
