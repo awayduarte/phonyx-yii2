@@ -1,35 +1,40 @@
 <?php
 
 /** @var yii\web\View $this */
-/** @var yii\bootstrap5\ActiveForm $form */
-/** @var \frontend\models\SignupForm $model */
+/** @var frontend\models\SignupForm $model */
 
-use yii\bootstrap5\Html;
-use yii\bootstrap5\ActiveForm;
+use yii\helpers\Html;
+use yii\widgets\ActiveForm;
 
-$this->title = 'Signup';
+$this->title = 'Criar Conta';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
-<div class="site-signup">
+<div class="site-signup container py-5">
+
     <h1><?= Html::encode($this->title) ?></h1>
 
-    <p>Please fill out the following fields to signup:</p>
+    <p>Preenche os dados para criares a tua conta Phonyx.</p>
 
-    <div class="row">
-        <div class="col-lg-5">
+    <div class="row mt-4">
+        <div class="col-md-6">
+
             <?php $form = ActiveForm::begin(['id' => 'form-signup']); ?>
 
-                <?= $form->field($model, 'username')->textInput(['autofocus' => true]) ?>
+                <?= $form->field($model, 'username')->textInput(['autofocus' => true, 'placeholder' => 'Username']) ?>
 
-                <?= $form->field($model, 'email') ?>
+                <?= $form->field($model, 'email')->textInput(['placeholder' => 'Email']) ?>
 
-                <?= $form->field($model, 'password')->passwordInput() ?>
+                <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'Password']) ?>
 
-                <div class="form-group">
-                    <?= Html::submitButton('Signup', ['class' => 'btn btn-primary', 'name' => 'signup-button']) ?>
+                <?= $form->field($model, 'confirm_password')->passwordInput(['placeholder' => 'Confirmar Password']) ?>
+
+                <div class="form-group mt-3">
+                    <?= Html::submitButton('Criar Conta', ['class' => 'btn btn-primary btn-lg btn-block']) ?>
                 </div>
 
             <?php ActiveForm::end(); ?>
+
         </div>
     </div>
+
 </div>
