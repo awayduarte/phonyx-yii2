@@ -1,3 +1,4 @@
+// Donut chart
 document.addEventListener("DOMContentLoaded", () => {
   const el = document.getElementById("contentChart");
   if (!el) return;

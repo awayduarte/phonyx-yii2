@@ -7,6 +7,9 @@ use yii\helpers\Url;
 
 AdminLteAsset::register($this);
 FontAwesomeAsset::register($this);
+$this->registerCssFile('@web/css/site.css', [
+    'depends' => [AdminLteAsset::class],
+]);
 
 // RBAC check
 $isAdmin = !Yii::$app->user->isGuest && Yii::$app->user->can('admin');
@@ -70,7 +73,15 @@ $isPlaylist = strpos($route, 'playlist/') === 0;
         <?php if ($isAdmin): ?>
             <aside class="main-sidebar sidebar-dark-primary elevation-4">
                 <a href="<?= Url::to(['/site/index']) ?>" class="brand-link">
-                    <span class="brand-text font-weight-light">PHONYX Admin</span>
+                    <!-- logo -->
+                    <img
+                        src="<?= Url::to('@web/images/logo') ?>"
+                        alt="Phonyx Logo"
+                        class="brand-image img-circle elevation-3"
+                        style="opacity: .8">
+
+                    <!-- expanded text -->
+                    <span class="brand-text font-weight-light">Phonyx Admin</span>
                 </a>
 
                 <div class="sidebar">
@@ -102,10 +113,10 @@ $isPlaylist = strpos($route, 'playlist/') === 0;
                             </li>
 
                             <li class="nav-item">
-                                <a href="<?= Url::to(['/genre/index']) ?>"
-                                    class="nav-link <?= $isGenre ? 'active' : '' ?>">
-                                    <i class="nav-icon fas fa-tags"></i>
-                                    <p>Genres</p>
+                                <a href="<?= Url::to(['/track/index']) ?>"
+                                    class="nav-link <?= $isTrack ? 'active' : '' ?>">
+                                    <i class="nav-icon fas fa-music"></i>
+                                    <p>Tracks</p>
                                 </a>
                             </li>
 
@@ -118,10 +129,18 @@ $isPlaylist = strpos($route, 'playlist/') === 0;
                             </li>
 
                             <li class="nav-item">
-                                <a href="<?= Url::to(['/track/index']) ?>"
-                                    class="nav-link <?= $isTrack ? 'active' : '' ?>">
-                                    <i class="nav-icon fas fa-music"></i>
-                                    <p>Tracks</p>
+                                <a href="<?= Url::to(['/playlist/index']) ?>"
+                                    class="nav-link <?= $isPlaylist ? 'active' : '' ?>">
+                                    <i class="nav-icon fas fa-list-ul"></i>
+                                    <p>Playlists</p>
+                                </a>
+                            </li>
+
+                            <li class="nav-item">
+                                <a href="<?= Url::to(['/genre/index']) ?>"
+                                    class="nav-link <?= $isGenre ? 'active' : '' ?>">
+                                    <i class="nav-icon fas fa-tags"></i>
+                                    <p>Genres</p>
                                 </a>
                             </li>
 
@@ -132,15 +151,6 @@ $isPlaylist = strpos($route, 'playlist/') === 0;
                                     <p>Assets</p>
                                 </a>
                             </li>
-
-                            <li class="nav-item">
-                                <a href="<?= Url::to(['/playlist/index']) ?>"
-                                    class="nav-link <?= $isPlaylist ? 'active' : '' ?>">
-                                    <i class="nav-icon fas fa-list-ul"></i>
-                                    <p>Playlists</p>
-                                </a>
-                            </li>
-
 
                         </ul>
                     </nav>

@@ -5,6 +5,8 @@ use yii\web\View;
 
 /** @var yii\web\View $this */
 /** @var array $stats */
+
+// External chart library (Chart.js)
 $this->registerJsFile(
     'https://cdn.jsdelivr.net/npm/chart.js',
     ['position' => View::POS_HEAD]
@@ -20,7 +22,7 @@ $this->title = 'Admin Dashboard';
 
 <div class="site-index">
 
-    <!-- KPI ROW -->
+    <!-- Cards -->
     <div class="row">
 
         <?php
@@ -52,54 +54,9 @@ $this->title = 'Admin Dashboard';
 
     </div>
 
-    <!-- MANAGEMENT PANELS -->
-
+    <!-- Donut chart -->
     <div class="row">
         <div class="col-md-6">
-            <div class="card card-primary">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-shield-alt"></i> Moderação & Conteúdos
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <ul>
-                        <li>Gestão de faixas e álbuns</li>
-                        <li>Gestão de géneros musicais</li>
-                        <li>Controlo de conteúdos</li>
-                    </ul>
-
-                    <?= Html::a('Gerir conteúdos', ['/track/index'], [
-                        'class' => 'btn btn-primary btn-sm'
-                    ]) ?>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-6">
-            <div class="card card-secondary">
-                <div class="card-header">
-                    <h3 class="card-title">
-                        <i class="fas fa-cogs"></i> Sistema & Segurança
-                    </h3>
-                </div>
-                <div class="card-body">
-                    <ul>
-                        <li>Gestão de utilizadores</li>
-                        <li>Roles e permissões</li>
-                        <li>Assets do sistema</li>
-                    </ul>
-
-                    <?= Html::a('Gerir utilizadores', ['/user/index'], [
-                        'class' => 'btn btn-secondary btn-sm'
-                    ]) ?>
-                </div>
-            </div>
-        </div>
-
-    </div>
-    <div class="row h-50">
-        <div class="col-md-4">
             <div class="card card-outline card-info">
                 <div class="card-header">
                     <h3 class="card-title">
@@ -113,8 +70,8 @@ $this->title = 'Admin Dashboard';
                                         $stats['tracks'] ?? 0,
                                         $stats['albums'] ?? 0,
                                         $stats['playlists'] ?? 0
-                                    ]) ?>'
-                        style="min-height:250px"></canvas>
+                                    ]) ?>'>
+                    </canvas>
                 </div>
             </div>
         </div>

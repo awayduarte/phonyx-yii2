@@ -20,4 +20,5 @@ class AppAsset extends AssetBundle
         'yii\web\YiiAsset',
         'hail812\adminlte3\assets\AdminLteAsset',
     ];
+    
 }
