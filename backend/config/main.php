@@ -11,7 +11,11 @@ return [
     'basePath' => dirname(__DIR__),
     'controllerNamespace' => 'backend\controllers',
     'bootstrap' => ['log'],
-    'modules' => [],
+    'modules' => [
+        'api' => [
+            'class' => 'backend\modules\api\Module',
+        ],
+    ],
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-backend',
@@ -42,8 +46,16 @@ return [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
+                ['class' => 'yii\rest\UrlRule','controller' => ['api/user'],
+                'extraPatterns' => [
+                'GET count' => 'count', // 'count' is 'actionCount'
+                'GET nomes' => 'nomes', // 'noume' is 'actionNome'
+                    ],
+                ],
+                'api/user/<username>/nome' => 'api/user/nome',
             ],
         ],
+        
     ],
     'params' => $params,
 ];
