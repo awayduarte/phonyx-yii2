@@ -23,28 +23,48 @@ class Asset extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            // type is required
-            [['type'], 'required'],
+            // file required only on create
+            [['file'], 'required', 'on' => 'create'],
 
-            // type validation
-            [['type'], 'string'],
-            ['type', 'in', 'range' => array_keys(self::optsType())],
-
-            // file upload validation
+            // file validation
             [
                 ['file'],
                 'file',
-                'skipOnEmpty' => false,
-                'extensions' => ['jpg', 'jpeg', 'png', 'mp3',],
-                'maxSize' => 1024 * 1024 * 20,
+                'skipOnEmpty' => true,
+                'extensions' => ['jpg', 'jpeg', 'png', 'mp3'],
+                'maxSize' => 1024 * 1024 * 12, // 12mb max
             ],
+
+            // detected asset type
+            [['type'], 'string'],
+
+            // stored relative path
+            [['path'], 'string', 'max' => 255],
+
+            // who uploaded the asset
+            [['created_by_user_id'], 'integer'],
 
             // timestamps handled by db
             [['created_at', 'updated_at'], 'safe'],
-
-            // path stored internally
-            [['path'], 'string', 'max' => 255],
         ];
+    }
+
+    /**
+     * detect asset type from file extension
+     */
+    protected function detectType()
+    {
+        $ext = strtolower($this->file->extension);
+
+        if (in_array($ext, ['jpg', 'jpeg', 'png'])) {
+            return self::TYPE_IMAGE;
+        }
+
+        if ($ext === 'mp3') {
+            return self::TYPE_AUDIO;
+        }
+
+        return self::TYPE_OTHER;
     }
 
     /**
@@ -56,26 +76,35 @@ class Asset extends \yii\db\ActiveRecord
             return false;
         }
 
-        // handle file upload
         if ($this->file instanceof UploadedFile) {
+
+            // detect type automatically
+            $this->type = $this->detectType();
+
+            // set uploader user only on create
+            if ($this->isNewRecord && !Yii::$app->user->isGuest) {
+                $this->created_by_user_id = Yii::$app->user->id;
+            }
+
+            // define upload folder
+            $folder = 'uploads/' . $this->type;
+            $basePath = Yii::getAlias('@webroot/' . $folder);
+
+            // ensure folder exists
+            if (!is_dir($basePath)) {
+                mkdir($basePath, 0775, true);
+            }
 
             // generate unique filename
             $filename = uniqid() . '.' . $this->file->extension;
 
-            // define upload folder by type
-            $folder = 'uploads/' . $this->type;
-
-            // ensure folder exists
-            if (!is_dir(Yii::getAlias('@webroot/' . $folder))) {
-                mkdir(Yii::getAlias('@webroot/' . $folder), 0775, true);
-            }
-
             // save file
-            $this->file->saveAs(Yii::getAlias("@webroot/{$folder}/{$filename}"));
+            $this->file->saveAs($basePath . '/' . $filename);
 
-            // save relative path in db
-            $this->path = "{$folder}/{$filename}";
+            // save relative path
+            $this->path = $folder . '/' . $filename;
         }
+
         return true;
     }
 
@@ -83,31 +112,32 @@ class Asset extends \yii\db\ActiveRecord
     // relations
     // -----------------------
 
-    // asset -> albums (covers)
+    // who uploaded this asset
+    public function getCreatedByUser()
+    {
+        return $this->hasOne(User::class, ['id' => 'created_by_user_id']);
+    }
+
     public function getAlbums()
     {
         return $this->hasMany(Album::class, ['cover_asset_id' => 'id']);
     }
 
-    // asset -> artists (avatars)
     public function getArtists()
     {
         return $this->hasMany(Artist::class, ['avatar_asset_id' => 'id']);
     }
 
-    // asset -> playlists (covers)
     public function getPlaylists()
     {
         return $this->hasMany(Playlist::class, ['cover_asset_id' => 'id']);
     }
 
-    // asset -> tracks (audio)
     public function getTracks()
     {
         return $this->hasMany(Track::class, ['audio_asset_id' => 'id']);
     }
 
-    // asset -> users (profile images)
     public function getUsers()
     {
         return $this->hasMany(User::class, ['profile_asset_id' => 'id']);
@@ -117,32 +147,13 @@ class Asset extends \yii\db\ActiveRecord
     // helpers
     // -----------------------
 
-    public static function optsType()
-    {
-        return [
-            self::TYPE_IMAGE => 'image',
-            self::TYPE_AUDIO => 'audio',
-            self::TYPE_OTHER => 'other',
-        ];
-    }
-
-    public function displayType()
-    {
-        return self::optsType()[$this->type] ?? null;
-    }
-
-    public function isTypeImage()
+    public function isImage()
     {
         return $this->type === self::TYPE_IMAGE;
     }
 
-    public function isTypeAudio()
+    public function isAudio()
     {
         return $this->type === self::TYPE_AUDIO;
-    }
-
-    public function isTypeOther()
-    {
-        return $this->type === self::TYPE_OTHER;
     }
 }

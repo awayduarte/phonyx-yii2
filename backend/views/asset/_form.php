@@ -10,34 +10,43 @@ use yii\widgets\ActiveForm;
  * @var common\models\Asset $model
  * @var yii\widgets\ActiveForm $form
  */
+
+$this->registerJsFile('@web/js/asset.js', [
+    'depends' => [\yii\web\JqueryAsset::class],
+]);
+
 ?>
 
 <div class="asset-form">
 
     <?php
-    // multipart for file upload
+    // start form with multipart for file upload
     $form = ActiveForm::begin([
         'options' => ['enctype' => 'multipart/form-data']
     ]);
     ?>
 
     <?php
-    // file upload (image, audio)
+    // custom styled file input 
     ?>
-    <?= $form->field($model, 'file')->fileInput() ?>
-
-    <?php
-    // asset type
-    ?>
-    <?= $form->field($model, 'type')->dropDownList([
-        'image' => 'image',
-        'audio' => 'audio',
-    ], [
-        'prompt' => 'select type'
+    <?= $form->field($model, 'file', [
+        'template' => "{label}
+        <div class=\"custom-file\">
+            {input}
+            <label class=\"custom-file-label\">choose file</label>
+        </div>
+        {error}",
+    ])->fileInput([
+        'class' => 'custom-file-input',
+        'accept' => 'image/*,audio/*',
     ]) ?>
 
-    <div class="form-group">
-        <?= Html::submitButton('save', ['class' => 'btn btn-success']) ?>
+    <?php
+    // submit button
+    ?>
+    <div class="form-group mt-3">
+        <?= Html::submitButton('Salvar', ['class' => 'btn btn-success']) ?>
+        <?= Html::a('Cancelar', ['index'], ['class' => 'btn btn-secondary ml-2']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>
