@@ -3,25 +3,41 @@
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
-/** @var yii\web\View $this */
-/** @var common\models\Asset $model */
-/** @var yii\widgets\ActiveForm $form */
+/**
+ * asset form
+ *
+ * @var yii\web\View $this
+ * @var common\models\Asset $model
+ * @var yii\widgets\ActiveForm $form
+ */
 ?>
 
 <div class="asset-form">
 
-    <?php $form = ActiveForm::begin(); ?>
+    <?php
+    // multipart for file upload
+    $form = ActiveForm::begin([
+        'options' => ['enctype' => 'multipart/form-data']
+    ]);
+    ?>
 
-    <?= $form->field($model, 'path')->textInput(['maxlength' => true]) ?>
+    <?php
+    // file upload (image, audio)
+    ?>
+    <?= $form->field($model, 'file')->fileInput() ?>
 
-    <?= $form->field($model, 'type')->dropDownList([ 'image' => 'Image', 'audio' => 'Audio', 'video' => 'Video', 'other' => 'Other', ], ['prompt' => '']) ?>
-
-    <?= $form->field($model, 'created_at')->textInput() ?>
-
-    <?= $form->field($model, 'updated_at')->textInput() ?>
+    <?php
+    // asset type
+    ?>
+    <?= $form->field($model, 'type')->dropDownList([
+        'image' => 'image',
+        'audio' => 'audio',
+    ], [
+        'prompt' => 'select type'
+    ]) ?>
 
     <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+        <?= Html::submitButton('save', ['class' => 'btn btn-success']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>

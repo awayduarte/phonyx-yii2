@@ -3,14 +3,17 @@
 namespace common\models;
 
 use Yii;
+use yii\web\UploadedFile;
 
 class Asset extends \yii\db\ActiveRecord
 {
     // asset types
     const TYPE_IMAGE = 'image';
     const TYPE_AUDIO = 'audio';
-    const TYPE_VIDEO = 'video';
     const TYPE_OTHER = 'other';
+
+    // uploaded file (not stored in db)
+    public $file;
 
     public static function tableName()
     {
@@ -20,15 +23,67 @@ class Asset extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['path', 'type'], 'required'],
+            // type is required
+            [['type'], 'required'],
+
+            // type validation
             [['type'], 'string'],
-            [['created_at', 'updated_at'], 'safe'],
-            [['path'], 'string', 'max' => 255],
             ['type', 'in', 'range' => array_keys(self::optsType())],
+
+            // file upload validation
+            [
+                ['file'],
+                'file',
+                'skipOnEmpty' => false,
+                'extensions' => ['jpg', 'jpeg', 'png', 'mp3',],
+                'maxSize' => 1024 * 1024 * 20,
+            ],
+
+            // timestamps handled by db
+            [['created_at', 'updated_at'], 'safe'],
+
+            // path stored internally
+            [['path'], 'string', 'max' => 255],
         ];
     }
 
-    // asset -> albums (cover images)
+    /**
+     * before save logic
+     */
+    public function beforeSave($insert)
+    {
+        if (!parent::beforeSave($insert)) {
+            return false;
+        }
+
+        // handle file upload
+        if ($this->file instanceof UploadedFile) {
+
+            // generate unique filename
+            $filename = uniqid() . '.' . $this->file->extension;
+
+            // define upload folder by type
+            $folder = 'uploads/' . $this->type;
+
+            // ensure folder exists
+            if (!is_dir(Yii::getAlias('@webroot/' . $folder))) {
+                mkdir(Yii::getAlias('@webroot/' . $folder), 0775, true);
+            }
+
+            // save file
+            $this->file->saveAs(Yii::getAlias("@webroot/{$folder}/{$filename}"));
+
+            // save relative path in db
+            $this->path = "{$folder}/{$filename}";
+        }
+        return true;
+    }
+
+    // -----------------------
+    // relations
+    // -----------------------
+
+    // asset -> albums (covers)
     public function getAlbums()
     {
         return $this->hasMany(Album::class, ['cover_asset_id' => 'id']);
@@ -46,32 +101,34 @@ class Asset extends \yii\db\ActiveRecord
         return $this->hasMany(Playlist::class, ['cover_asset_id' => 'id']);
     }
 
-    // asset -> tracks (audio files)
+    // asset -> tracks (audio)
     public function getTracks()
     {
         return $this->hasMany(Track::class, ['audio_asset_id' => 'id']);
     }
 
-    // asset -> users (profile pictures)
+    // asset -> users (profile images)
     public function getUsers()
     {
         return $this->hasMany(User::class, ['profile_asset_id' => 'id']);
     }
 
-    // enum labels
+    // -----------------------
+    // helpers
+    // -----------------------
+
     public static function optsType()
     {
         return [
             self::TYPE_IMAGE => 'image',
             self::TYPE_AUDIO => 'audio',
-            self::TYPE_VIDEO => 'video',
             self::TYPE_OTHER => 'other',
         ];
     }
 
     public function displayType()
     {
-        return self::optsType()[$this->type];
+        return self::optsType()[$this->type] ?? null;
     }
 
     public function isTypeImage()
@@ -79,38 +136,13 @@ class Asset extends \yii\db\ActiveRecord
         return $this->type === self::TYPE_IMAGE;
     }
 
-    public function setTypeToImage()
-    {
-        $this->type = self::TYPE_IMAGE;
-    }
-
     public function isTypeAudio()
     {
         return $this->type === self::TYPE_AUDIO;
     }
 
-    public function setTypeToAudio()
-    {
-        $this->type = self::TYPE_AUDIO;
-    }
-
-    public function isTypeVideo()
-    {
-        return $this->type === self::TYPE_VIDEO;
-    }
-
-    public function setTypeToVideo()
-    {
-        $this->type = self::TYPE_VIDEO;
-    }
-
     public function isTypeOther()
     {
         return $this->type === self::TYPE_OTHER;
-    }
-
-    public function setTypeToOther()
-    {
-        $this->type = self::TYPE_OTHER;
     }
 }

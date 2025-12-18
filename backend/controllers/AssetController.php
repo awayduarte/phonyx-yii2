@@ -7,6 +7,8 @@ use backend\models\AssetSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\UploadedFile;
+use Yii;
 
 /**
  * AssetController implements the CRUD actions for Asset model.
@@ -22,7 +24,7 @@ class AssetController extends Controller
             parent::behaviors(),
             [
                 'verbs' => [
-                    'class' => VerbFilter::className(),
+                    'class' => VerbFilter::class,
                     'actions' => [
                         'delete' => ['POST'],
                     ],
@@ -70,11 +72,39 @@ class AssetController extends Controller
         $model = new Asset();
 
         if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+
+            // load form data
+            $model->load($this->request->post());
+
+            // get uploaded file
+            $model->file = UploadedFile::getInstance($model, 'file');
+
+            if ($model->file) {
+
+                // choose folder by type
+                $folder = $model->type === Asset::TYPE_AUDIO ? 'audio' : 'images';
+
+                $basePath = Yii::getAlias('@common/web/uploads/' . $folder);
+
+                // create folder if not exists
+                if (!is_dir($basePath)) {
+                    mkdir($basePath, 0777, true);
+                }
+
+                // generate unique filename
+                $fileName = uniqid() . '.' . $model->file->extension;
+
+                // save file
+                $model->file->saveAs($basePath . '/' . $fileName);
+
+                // save relative path in db
+                $model->path = 'uploads/' . $folder . '/' . $fileName;
+            }
+
+            // save model
+            if ($model->save(false)) {
                 return $this->redirect(['view', 'id' => $model->id]);
             }
-        } else {
-            $model->loadDefaultValues();
         }
 
         return $this->render('create', [
