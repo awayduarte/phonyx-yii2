@@ -9,7 +9,6 @@ class LoginForm extends Model
 {
     // form fields
     public $email;
-    public $username;
     public $password;
     public $rememberMe = true;
 
@@ -60,8 +59,7 @@ class LoginForm extends Model
     {
         if ($this->_user === null) {
             $this->_user = User::find()
-                ->where(['email' => $this->email])
-                ->andWhere(['username' => $this->username])
+                ->where(['email' => $this->email])  
                 ->andWhere(['status' => 10])
                 ->andWhere(['deleted_at' => null])
                 ->one();

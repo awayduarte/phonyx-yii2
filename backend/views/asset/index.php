@@ -25,6 +25,16 @@ $this->params['breadcrumbs'][] = $this->title;
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
+
+        // adminlte friendly pagination
+        'pager' => [
+            'class' => \yii\bootstrap4\LinkPager::class,
+            'options' => ['class' => 'pagination justify-content-center'],
+            'linkContainerOptions' => ['class' => 'page-item'],
+            'linkOptions' => ['class' => 'page-link'],
+            'disabledListItemSubTagOptions' => ['class' => 'page-link'],
+        ],
+
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
 
@@ -59,7 +69,6 @@ $this->params['breadcrumbs'][] = $this->title;
                         : '<span class="badge badge-info">' . implode(', ', $used) . '</span>';
                 },
             ],
-            // 'created_at',
 
             [
                 'class' => ActionColumn::class,
