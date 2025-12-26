@@ -2,23 +2,21 @@
 
 namespace frontend\controllers;
 
-use frontend\models\ResendVerificationEmailForm;
-use frontend\models\VerifyEmailForm;
 use Yii;
-use yii\base\InvalidArgumentException;
-use yii\web\BadRequestHttpException;
 use yii\web\Controller;
 use yii\filters\VerbFilter;
 use yii\filters\AccessControl;
-use frontend\models\LoginForm;
-use frontend\models\PasswordResetRequestForm;
-use frontend\models\ResetPasswordForm;
-use frontend\models\SignupForm;
-use frontend\models\ContactForm;
 
-/**
- * Site controller
- */
+use common\models\LoginForm;
+use frontend\models\SignupForm;
+
+// SEARCH MODELS
+use common\models\Track;
+use common\models\Artist;
+use common\models\Album;
+use common\models\Playlist;
+use common\models\User;
+
 class SiteController extends Controller
 {
     /**
@@ -69,9 +67,7 @@ class SiteController extends Controller
     }
 
     /**
-     * Displays homepage.
-     *
-     * @return mixed
+     * Homepage
      */
     public function actionIndex()
     {
@@ -79,82 +75,94 @@ class SiteController extends Controller
     }
 
     /**
-     * Logs in a user.
-     *
-     * @return mixed
+     * 🔍 SEARCH PAGE
+     * URL: /site/search?q=...
      */
-    public function actionLogin()
+    public function actionSearch($q = null, $type = 'all')
     {
-        if (!Yii::$app->user->isGuest) {
-            return $this->goHome();
+        $q = trim((string) $q);
+        $type = $type ?: 'all';
+
+        // Empty results structure
+        $results = [
+            'tracks'    => [],
+            'artists'   => [],
+            'albums'    => [],
+            'playlists' => [],
+            'profiles'  => [],
+        ];
+
+        // If query is empty, just show the page
+        if ($q === '') {
+            return $this->render('search', [
+                'q' => $q,
+                'type' => $type,
+                'results' => $results,
+            ]);
         }
 
-        $model = new \frontend\models\LoginForm();
-
-        if ($model->load(Yii::$app->request->post()) && $model->login()) {
-            return $this->goBack();
+        // 🎵 Tracks
+        if ($type === 'all' || $type === 'songs') {
+            $results['tracks'] = Track::find()
+                ->joinWith(['artist', 'audioAsset'])
+                ->andFilterWhere(['like', 'track.title', $q])
+                ->orderBy(['track.created_at' => SORT_DESC])
+                ->limit(20)
+                ->all();
         }
 
-        return $this->render('login', [
-            'model' => $model,
+        // 🎤 Artists
+        if ($type === 'all' || $type === 'artists') {
+            $results['artists'] = Artist::find()
+                ->andFilterWhere(['like', 'stage_name', $q])
+                ->orderBy(['stage_name' => SORT_ASC])
+                ->limit(20)
+                ->all();
+        }
+
+        // 💿 Albums
+        if ($type === 'all' || $type === 'albums') {
+            $results['albums'] = Album::find()
+                ->andFilterWhere(['like', 'title', $q])
+                ->orderBy(['created_at' => SORT_DESC])
+                ->limit(20)
+                ->all();
+        }
+
+        // 📂 Playlists
+        if ($type === 'all' || $type === 'playlists') {
+            $results['playlists'] = Playlist::find()
+                ->andFilterWhere(['like', 'title', $q])
+                ->orderBy(['created_at' => SORT_DESC])
+                ->limit(20)
+                ->all();
+        }
+
+        // 👤 Profiles (users)
+        if ($type === 'all' || $type === 'profiles') {
+            $results['profiles'] = User::find()
+                ->andFilterWhere(['like', 'username', $q])
+                ->orderBy(['username' => SORT_ASC])
+                ->limit(20)
+                ->all();
+        }
+
+        return $this->render('search', [
+            'q' => $q,
+            'type' => $type,
+            'results' => $results,
         ]);
     }
 
     /**
-     * Logs out the current user.
-     *
-     * @return mixed
-     */
-    public function actionLogout()
-    {
-        Yii::$app->user->logout();
-
-        return $this->goHome();
-    }
-
-    /**
-     * Displays contact page.
-     *
-     * @return mixed
-     */
-    public function actionContact()
-    {
-        $model = new ContactForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->sendEmail(Yii::$app->params['adminEmail'])) {
-                Yii::$app->session->setFlash('success', 'Thank you for contacting us. We will respond to you as soon as possible.');
-            } else {
-                Yii::$app->session->setFlash('error', 'There was an error sending your message.');
-            }
-
-            return $this->refresh();
-        }
-
-        return $this->render('contact', [
-            'model' => $model,
-        ]);
-    }
-
-    /**
-     * Displays about page.
-     *
-     * @return mixed
-     */
-    public function actionAbout()
-    {
-        return $this->render('about');
-    }
-
-    /**
-     * Signs user up.
-     *
-     * @return mixed
+     * Signup
      */
     public function actionSignup()
     {
         $model = new SignupForm();
-        if ($model->load(Yii::$app->request->post()) && $model->signup()) {
-            Yii::$app->session->setFlash('success', 'Thank you for registration. Please check your inbox for verification email.');
+
+        if ($model->load(Yii::$app->request->post()) && ($user = $model->signup())) {
+            Yii::$app->user->login($user);
             return $this->goHome();
         }
 
@@ -164,95 +172,41 @@ class SiteController extends Controller
     }
 
     /**
-     * Requests password reset.
-     *
-     * @return mixed
+     * Login
      */
-    public function actionRequestPasswordReset()
+    public function actionLogin()
     {
-        $model = new PasswordResetRequestForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->sendEmail()) {
-                Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
-
-                return $this->goHome();
-            }
-
-            Yii::$app->session->setFlash('error', 'Sorry, we are unable to reset password for the provided email address.');
+        if (!Yii::$app->user->isGuest) {
+            return $this->goHome();
         }
 
-        return $this->render('requestPasswordResetToken', [
+        $model = new LoginForm();
+
+        if ($model->load(Yii::$app->request->post()) && $model->login()) {
+            return $this->goHome();
+        }
+
+        $model->password = '';
+
+        return $this->render('login', [
             'model' => $model,
         ]);
     }
 
     /**
-     * Resets password.
-     *
-     * @param string $token
-     * @return mixed
-     * @throws BadRequestHttpException
+     * Logout
      */
-    public function actionResetPassword($token)
+    public function actionLogout()
     {
-        try {
-            $model = new ResetPasswordForm($token);
-        } catch (InvalidArgumentException $e) {
-            throw new BadRequestHttpException($e->getMessage());
-        }
-
-        if ($model->load(Yii::$app->request->post()) && $model->validate() && $model->resetPassword()) {
-            Yii::$app->session->setFlash('success', 'New password saved.');
-
-            return $this->goHome();
-        }
-
-        return $this->render('resetPassword', [
-            'model' => $model,
-        ]);
-    }
-
-    /**
-     * Verify email address
-     *
-     * @param string $token
-     * @throws BadRequestHttpException
-     * @return yii\web\Response
-     */
-    public function actionVerifyEmail($token)
-    {
-        try {
-            $model = new VerifyEmailForm($token);
-        } catch (InvalidArgumentException $e) {
-            throw new BadRequestHttpException($e->getMessage());
-        }
-        if ($model->verifyEmail()) {
-            Yii::$app->session->setFlash('success', 'Your email has been confirmed!');
-            return $this->goHome();
-        }
-
-        Yii::$app->session->setFlash('error', 'Sorry, we are unable to verify your account with provided token.');
+        Yii::$app->user->logout();
         return $this->goHome();
     }
 
     /**
-     * Resend verification email
-     *
-     * @return mixed
+     * About page
      */
-    public function actionResendVerificationEmail()
+    public function actionAbout()
     {
-        $model = new ResendVerificationEmailForm();
-        if ($model->load(Yii::$app->request->post()) && $model->validate()) {
-            if ($model->sendEmail()) {
-                Yii::$app->session->setFlash('success', 'Check your email for further instructions.');
-                return $this->goHome();
-            }
-            Yii::$app->session->setFlash('error', 'Sorry, we are unable to resend verification email for the provided email address.');
-        }
-
-        return $this->render('resendVerificationEmail', [
-            'model' => $model
-        ]);
+        return $this->render('about');
     }
 }

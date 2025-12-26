@@ -1,84 +1,94 @@
 <?php
 
-/** @var \yii\web\View $this */
-/** @var string $content */
-
-use common\widgets\Alert;
 use frontend\assets\AppAsset;
-use yii\bootstrap5\Breadcrumbs;
-use yii\bootstrap5\Html;
-use yii\bootstrap5\Nav;
-use yii\bootstrap5\NavBar;
+use yii\helpers\Html;
 
+// calcular displayName 
+$identity = Yii::$app->user->identity ?? null;
+if (!isset($displayName) && $identity) {
+    $displayName = $identity->username
+        ?? $identity->email
+        ?? $identity->name
+        ?? 'User';
+}
 AppAsset::register($this);
 ?>
 <?php $this->beginPage() ?>
 <!DOCTYPE html>
-<html lang="<?= Yii::$app->language ?>" class="h-100">
+<html lang="<?= Yii::$app->language ?>">
 <head>
     <meta charset="<?= Yii::$app->charset ?>">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <?php $this->registerCsrfMetaTags() ?>
     <title><?= Html::encode($this->title) ?></title>
     <?php $this->head() ?>
-</head>
-<body class="d-flex flex-column h-100">
-<?php $this->beginBody() ?>
 
-<header>
     <?php
-    NavBar::begin([
-        'brandLabel' => Yii::$app->name,
-        'brandUrl' => Yii::$app->homeUrl,
-        'options' => [
-            'class' => 'navbar navbar-expand-md navbar-dark bg-dark fixed-top',
-        ],
+    // CSS principal da PHONYX
+    $this->registerCssFile('@web/css/phonyx.css', [
+        'depends' => [\yii\web\YiiAsset::class],
     ]);
-    $menuItems = [
-        ['label' => 'Home', 'url' => ['/site/index']],
-        ['label' => 'About', 'url' => ['/site/about']],
-        ['label' => 'Contact', 'url' => ['/site/contact']],
-    ];
-    if (Yii::$app->user->isGuest) {
-        $menuItems[] = ['label' => 'Signup', 'url' => ['/site/signup']];
-    }
+    $this->registerCssFile('@web/css/artist.css', ['depends' => [\yii\web\YiiAsset::class]]);
+    $this->registerCssFile('@web/css/artist-dashboard.css', ['depends' => [\yii\web\YiiAsset::class]]);
+    
 
-    echo Nav::widget([
-        'options' => ['class' => 'navbar-nav me-auto mb-2 mb-md-0'],
-        'items' => $menuItems,
-    ]);
-    if (Yii::$app->user->isGuest) {
-        echo Html::tag('div',Html::a('Login',['/site/login'],['class' => ['btn btn-link login text-decoration-none']]),['class' => ['d-flex']]);
-    } else {
-        echo Html::beginForm(['/site/logout'], 'post', ['class' => 'd-flex'])
-            . Html::submitButton(
-                'Logout (' . Yii::$app->user->identity->username . ')',
-                ['class' => 'btn btn-link logout text-decoration-none']
-            )
-            . Html::endForm();
-    }
-    NavBar::end();
     ?>
-</header>
+</head>
+<body>
+<?php $this->beginBody() ?>
+<div class="wrap">
+    <?= $this->render('//partials/navbar') ?>
 
-<main role="main" class="flex-shrink-0">
-    <div class="container">
-        <?= Breadcrumbs::widget([
-            'links' => isset($this->params['breadcrumbs']) ? $this->params['breadcrumbs'] : [],
-        ]) ?>
-        <?= Alert::widget() ?>
+    <main class="phonyx-layout-content">
         <?= $content ?>
-    </div>
-</main>
+    </main>
+</div>
 
-<footer class="footer mt-auto py-3 text-muted">
-    <div class="container">
-        <p class="float-start">&copy; <?= Html::encode(Yii::$app->name) ?> <?= date('Y') ?></p>
-        <p class="float-end"><?= Yii::powered() ?></p>
-    </div>
-</footer>
+<?php
+$js = <<<JS
+(function() {
+  const nav = document.querySelector('.js-user-nav');
+  if (!nav) return;
+
+  const trigger = nav.querySelector('.js-user-trigger');
+  const menu = nav.querySelector('.js-user-menu');
+
+  function closeMenu() {
+    nav.classList.remove('is-open');
+  }
+
+  function toggleMenu() {
+    nav.classList.toggle('is-open');
+  }
+
+  trigger.addEventListener('click', function(e) {
+    e.stopPropagation();
+    toggleMenu();
+  });
+
+  // fechar ao clicar fora
+  document.addEventListener('click', function(e) {
+    if (!nav.contains(e.target)) {
+      closeMenu();
+    }
+  });
+
+  // fechar com ESC
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeMenu();
+    }
+  });
+})();
+JS;
+
+$this->registerJs($js, \yii\web\View::POS_END);
+?>
+<?php
+echo $this->render('//partials/player');
+?>
 
 <?php $this->endBody() ?>
 </body>
 </html>
-<?php $this->endPage();
+<?php $this->endPage() ?>

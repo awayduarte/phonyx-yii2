@@ -7,31 +7,24 @@ use yii\base\Model;
 
 class LoginForm extends Model
 {
-    // form fields
-    public $email;
+    public $email;     
     public $password;
     public $rememberMe = true;
 
-    // cached user
     private ?User $_user = null;
 
-    // validation rules
     public function rules()
     {
         return [
             [['email', 'password'], 'required'],
-            ['email', 'email'],
             ['rememberMe', 'boolean'],
             ['password', 'validatePassword'],
         ];
     }
 
-    // password validation
     public function validatePassword($attribute, $params)
     {
-        if ($this->hasErrors()) {
-            return;
-        }
+        if ($this->hasErrors()) return;
 
         $user = $this->getUser();
 
@@ -40,12 +33,9 @@ class LoginForm extends Model
         }
     }
 
-    // login user
     public function login()
     {
-        if (!$this->validate()) {
-            return false;
-        }
+        if (!$this->validate()) return false;
 
         return Yii::$app->user->login(
             $this->getUser(),
@@ -53,15 +43,12 @@ class LoginForm extends Model
         );
     }
 
-    // find active and non-deleted user
     protected function getUser(): ?User
     {
         if ($this->_user === null) {
-            $this->_user = User::find()
-                ->where(['email' => $this->email])
-                ->andWhere(['status' => 10])
-                ->andWhere(['deleted_at' => null])
-                ->one();
+            $value = trim((string)$this->email);
+
+            $this->_user = User::findByUsernameOrEmail($value);
         }
 
         return $this->_user;

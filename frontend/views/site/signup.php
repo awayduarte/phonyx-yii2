@@ -1,35 +1,35 @@
 <?php
 
-/** @var yii\web\View $this */
-/** @var yii\bootstrap5\ActiveForm $form */
-/** @var \frontend\models\SignupForm $model */
-
-use yii\bootstrap5\Html;
+use yii\helpers\Html;
 use yii\bootstrap5\ActiveForm;
 
-$this->title = 'Signup';
-$this->params['breadcrumbs'][] = $this->title;
+$this->title = 'Criar Conta';
+
+$this->registerCssFile('@web/css/signup.css');
 ?>
-<div class="site-signup">
-    <h1><?= Html::encode($this->title) ?></h1>
 
-    <p>Please fill out the following fields to signup:</p>
+<div class="signup-wrapper">
+    <div class="signup-card">
+        <h1>Criar Conta</h1>
 
-    <div class="row">
-        <div class="col-lg-5">
-            <?php $form = ActiveForm::begin(['id' => 'form-signup']); ?>
+        <?php $form = ActiveForm::begin(['id' => 'form-signup']); ?>
 
-                <?= $form->field($model, 'username')->textInput(['autofocus' => true]) ?>
+            <?= $form->field($model, 'username')->textInput(['placeholder' => 'Nome de utilizador']) ?>
 
-                <?= $form->field($model, 'email') ?>
+            <?= $form->field($model, 'email')->input('email', ['placeholder' => 'Email']) ?>
 
-                <?= $form->field($model, 'password')->passwordInput() ?>
+            <?= $form->field($model, 'password')->passwordInput(['placeholder' => 'Palavra-passe']) ?>
 
-                <div class="form-group">
-                    <?= Html::submitButton('Signup', ['class' => 'btn btn-primary', 'name' => 'signup-button']) ?>
-                </div>
+            <?= $form->field($model, 'confirm_password')->passwordInput(['placeholder' => 'Confirmar palavra-passe']) ?>
 
-            <?php ActiveForm::end(); ?>
+            <div class="form-group mt-3">
+                <?= Html::submitButton('Criar conta', ['class' => 'btn btn-primary']) ?>
+            </div>
+
+        <?php ActiveForm::end(); ?>
+
+        <div class="login-link">
+            Já tens conta? <?= Html::a('Entrar', ['site/login']) ?>
         </div>
     </div>
 </div>

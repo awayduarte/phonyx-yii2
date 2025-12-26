@@ -12,16 +12,18 @@ class SignupForm extends Model
     public $username;
     public $email;
     public $password;
+    public $confirm_password;
 
     // validation rules
     public function rules()
     {
         return [
-            [['username', 'email', 'password'], 'required'],
+            [['username', 'email', 'password', 'confirm_password'], 'required'],
 
             ['username', 'string', 'min' => 2, 'max' => 100],
             ['email', 'email'],
             ['password', 'string', 'min' => 6],
+            ['confirm_password', 'compare', 'compareAttribute' => 'password', 'message' => 'Passwords do not match.'],
 
             ['username', 'unique', 'targetClass' => User::class],
             ['email', 'unique', 'targetClass' => User::class],

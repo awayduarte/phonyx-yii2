@@ -1,0 +1,390 @@
+:root {
+  --brand-main: #6b5c51;
+  --brand-accent: #ffa35d;
+  --bg-card: #2b221b;
+  --text-main: #f8f3ee;
+  --text-muted: #c2b4a6;
+  --radius-lg: 24px;
+}
+
+.login-page,
+.login-card,
+.login-left,
+.login-right,
+.brand,
+.login-form,
+.field,
+.form-row,
+.vinyl-wrapper {
+  box-sizing: border-box;
+}
+
+.login-page {
+  width: 100%;
+  max-width: 960px;
+  min-height: calc(100vh - 120px);
+  margin: 40px auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  color: var(--text-main);
+}
+
+.login-card {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
+  background: radial-gradient(circle at top, #33251c, var(--bg-card) 55%, #18110e);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(107, 92, 81, 0.7);
+  overflow: hidden;
+  box-shadow:
+    0 22px 60px rgba(0, 0, 0, 0.9),
+    0 0 0 1px rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(18px);
+}
+
+@media (max-width: 800px) {
+  .login-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* LEFT SIDE */
+
+.login-left {
+  padding: 28px 32px 26px;
+  background: linear-gradient(135deg, #231b15 0%, #1a130f 45%, #120c08 100%);
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.brand-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 30% 20%, var(--brand-accent), var(--brand-main));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 18px;
+  box-shadow: 0 0 16px rgba(255, 163, 93, 0.55);
+}
+
+.brand-title {
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: white;
+}
+
+.brand-sub {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.22em;
+}
+
+.login-title {
+  font-size: 22px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.login-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+
+/* FORM (ActiveForm) */
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.login-form .form-group {
+  margin-bottom: 4px;
+}
+
+.login-form label {
+  font-size: 13px;
+}
+
+.login-form .form-control {
+  border-radius: 999px;
+  border: 1px solid rgba(107, 92, 81, 0.9);
+  padding: 9px 13px;
+  background: rgba(24, 16, 11, 0.95);
+  color: var(--text-main);
+  outline: none;
+  font-size: 14px;
+  transition: border 0.15s ease, box-shadow 0.15s ease, background 0.15s ease,
+    transform 0.08s ease;
+}
+
+.login-form .form-control::placeholder {
+  color: rgba(194, 180, 166, 0.7);
+}
+
+.login-form .form-control:focus {
+  border-color: var(--brand-accent);
+  box-shadow: 0 0 0 1px rgba(255, 163, 93, 0.7);
+  background: rgba(27, 19, 13, 0.98);
+  transform: translateY(-1px);
+}
+
+.login-form .invalid-feedback {
+  font-size: 11px;
+  margin-top: 3px;
+}
+
+/* linha lembrar-me + link */
+
+.form-row {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.remember {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.remember input {
+  width: 14px;
+  height: 14px;
+  accent-color: var(--brand-accent);
+}
+
+.link {
+  color: var(--brand-accent);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+/* BUTTON */
+
+.btn-login {
+  margin-top: 12px;
+  border-radius: 999px;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  background: linear-gradient(135deg, var(--brand-accent), #ffbf87);
+  color: #3b2718;
+  box-shadow: 0 12px 30px rgba(255, 163, 93, 0.5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: transform 0.08s ease, box-shadow 0.1s ease, filter 0.1s ease;
+}
+
+.btn-login .icon {
+  font-size: 16px;
+}
+
+.btn-login:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+}
+
+.btn-login:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.7);
+}
+
+.login-footer {
+  margin-top: 16px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* RIGHT SIDE – VINYL */
+
+.login-right {
+  padding: 26px 24px;
+  background:
+    radial-gradient(circle at top, rgba(255, 163, 93, 0.35), transparent 55%),
+    radial-gradient(circle at bottom, rgba(107, 92, 81, 0.7), #120c08 70%);
+  border-left: 1px solid rgba(73, 61, 51, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vinyl-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+
+.vinyl-shadow {
+  width: 210px;
+  height: 210px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 20%, #4b3c31, #140d09 65%, #000 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 28px 55px rgba(0, 0, 0, 0.95),
+    0 0 0 1px rgba(0, 0, 0, 0.8);
+}
+
+.vinyl {
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  position: relative;
+  background:
+    radial-gradient(circle at 50% 50%, #111 0 25%, #171717 25% 27%, #0f0f0f 27% 100%);
+  overflow: hidden;
+}
+
+/* sulcos do vinil */
+
+.vinyl-grooves {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background-image:
+    repeating-radial-gradient(
+      circle at 50% 50%,
+      rgba(0, 0, 0, 0.15) 0,
+      rgba(0, 0, 0, 0.15) 1px,
+      transparent 1px,
+      transparent 3px
+    );
+  opacity: 0.9;
+}
+
+/* etiqueta central */
+
+.vinyl-label {
+  position: absolute;
+  inset: 50% 50%;
+  width: 58px;
+  height: 58px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle at 20% 0%, #ffe7cf, var(--brand-accent));
+  border: 3px solid #3b2718;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.vinyl-logo {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  font-weight: 700;
+}
+
+.vinyl-sub {
+  font-size: 8px;
+  letter-spacing: 0.14em;
+}
+
+/* texto por baixo do vinil */
+
+.vinyl-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  max-width: 220px;
+}
+
+/* ANIMAÇÃO DO VINIL */
+
+@keyframes spin-vinyl {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.vinyl.spin {
+  animation: spin-vinyl 0.7s linear infinite;
+}
+/* ==========================================================
+   FORCE TOTAL: TUDO BRANCO NO LADO ESQUERDO
+   Isto vence bootstrap, activeform, inline e herança TODA
+   ========================================================== */
+
+/* Painel esquerdo inteiro */
+.login-left,
+.login-left * {
+    color: #ffffff !important;
+}
+
+
+/* Labels do ActiveForm (estes são os mais difíceis) */
+.login-left .control-label,
+.login-left label,
+.login-left .form-group label,
+.login-left .form-control-label {
+    color: #ffffff !important;
+}
+
+
+/* Texto da frase "Entra na tua conta..." */
+.login-left .login-subtitle,
+.login-left p {
+    color: #ffffff !important;
+}
+
+
+/* Placeholder também branco */
+.login-left input::placeholder,
+.login-left .form-control::placeholder {
+    color: rgba(255,255,255,0.85) !important;
+}
+
+
+/* Lembrar-me */
+.login-left .remember span {
+    color: #ffffff !important;
+}
+
+
+/* Footer: "Ainda não tens conta?" */
+.login-left .login-footer {
+    color: #ffffff !important;
+}
+
+
+/* Links — continuas com laranja PHONYX */
+.login-left a.link {
+    color: var(--brand-accent) !important;
+}
+
+.login-left a.link:hover {
+    color: #ffd8a0 !important;
+}
