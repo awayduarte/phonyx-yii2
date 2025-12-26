@@ -1,0 +1,397 @@
+/* ====== PÁGINA CRIAR CONTA ARTISTA ====== */
+
+.artist-auth-page {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 16px;
+}
+
+/* Card central, estilo igual ao signup */
+.artist-auth-card {
+    background: #2b221b;
+    border-radius: 24px;
+    padding: 32px 32px 26px;
+    max-width: 520px;
+    width: 100%;
+    color: #f8f3ee;
+    box-shadow: 0 26px 60px rgba(0,0,0,0.9);
+}
+
+.artist-auth-title {
+    text-align: center;
+    font-size: 24px;
+    margin: 0 0 8px;
+    color: #ffa35d;
+}
+
+.artist-auth-subtitle {
+    text-align: center;
+    font-size: 13px;
+    color: #c2b4a6;
+    margin: 0 0 22px;
+}
+
+/* ====== CAMPOS ====== */
+
+.artist-auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.artist-auth-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.artist-auth-label {
+    font-size: 12px;
+    color: #e5d7c8;
+}
+
+/* força override ao Bootstrap */
+.artist-auth-input {
+    width: 100%;
+    border-radius: 12px !important;
+    border: none !important;
+    background: #fffde0 !important;
+    padding: 10px 12px !important;
+    font-size: 14px;
+    outline: none;
+    color: #21160a !important;
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,0.08) !important;
+    transition: box-shadow 0.16s ease, transform 0.08s ease;
+}
+
+.artist-auth-input::placeholder {
+    color: #7c756b;
+}
+
+.artist-auth-input:focus {
+    box-shadow: inset 0 0 0 2px #ffa35d, 0 0 0 1px rgba(0,0,0,0.4) !important;
+    transform: translateY(-1px);
+}
+
+.artist-auth-textarea {
+    resize: vertical;
+    min-height: 90px;
+}
+
+/* ====== ERROS ====== */
+
+.artist-auth-error {
+    font-size: 11px;
+    color: #ffb0b0;
+    min-height: 14px;
+}
+
+/* ====== BOTÃO ====== */
+
+.artist-auth-actions {
+    margin-top: 18px;
+    display: flex;
+    justify-content: center;
+}
+
+.artist-auth-submit {
+    background: #1b6eff;
+    color: #ffffff;
+    border-radius: 999px;
+    padding: 10px 26px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 18px 40px rgba(0, 80, 255, 0.6);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.artist-auth-submit:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 22px 48px rgba(0, 80, 255, 0.75);
+}
+
+/* ====== RESPONSIVE ====== */
+
+@media (max-width: 480px) {
+    .artist-auth-card {
+        padding: 24px 18px 22px;
+        border-radius: 20px;
+    }
+}
+
+/* WRAPPER */
+.artist-dash-wrapper {
+    max-width: 1100px;
+    margin: 32px auto 60px;
+    color: #ffffff;
+}
+
+/* HEADER */
+.artist-dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.artist-dash-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    background: rgba(255, 165, 51, 0.08);
+    border: 1px solid rgba(255, 165, 51, 0.45);
+    color: #ffb55c;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+}
+
+.artist-dash-header h1 {
+    font-size: 32px;
+    margin: 6px 0 6px;
+}
+
+.artist-dash-header p {
+    font-size: 14px;
+    color: #b7b7b7;
+    margin: 0;
+    max-width: 540px;
+}
+
+.artist-dash-back {
+    text-decoration: none;
+    background: #181818;
+    color: #f8f3ee;
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 13px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.6);
+    transition: 0.15s ease;
+}
+
+.artist-dash-back:hover {
+    background: #222;
+    transform: translateY(-1px);
+}
+
+/* GRID */
+.artist-dash-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: 18px;
+}
+
+/* CARDS */
+.artist-dash-card {
+    background: #151515;
+    border-radius: 18px;
+    padding: 18px;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.75);
+}
+
+.artist-dash-card h2 {
+    font-size: 16px;
+    margin: 0 0 6px;
+}
+
+.artist-dash-card p {
+    font-size: 13px;
+    color: #c5c5c5;
+}
+
+/* AÇÕES RÁPIDAS */
+.artist-dash-quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.artist-dash-pill {
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: #ffa533;
+    color: #1b1203;
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 600;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.5);
+    transition: 0.15s ease;
+}
+
+.artist-dash-pill:hover {
+    transform: translateY(-1px);
+}
+
+.artist-dash-pill.ghost {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.18);
+    color: #fff;
+    box-shadow: none;
+}
+
+/* STATS */
+.artist-dash-stats {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0;
+}
+
+.artist-dash-stats li {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-radius: 12px;
+    background: #1a1a1a;
+    font-size: 13px;
+    margin-bottom: 6px;
+}
+
+.artist-dash-bio {
+    font-size: 13px;
+    color: #d6d6d6;
+    margin-bottom: 12px;
+}
+
+/* LINKS */
+.artist-dash-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.artist-dash-link {
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 999px;
+    padding: 6px 12px;
+    font-size: 12px;
+    color: #fff;
+    text-decoration: none;
+}
+
+.artist-dash-link:hover {
+    background: #222;
+}
+
+/* RESPONSIVE */
+@media (max-width: 900px) {
+    .artist-dash-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .artist-dash-header {
+        flex-direction: column;
+    }
+}
+/*Add Track*/
+.feat-search-results {
+    display: none;
+    margin-top: 6px;
+    padding: 6px;
+    border-radius: 12px;
+    background: #111111;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.7);
+    max-height: 180px;
+    overflow-y: auto;
+}
+
+.feat-search-item {
+    width: 100%;
+    text-align: left;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #f5f5f5;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.feat-search-item:hover {
+    background: rgba(255,255,255,0.06);
+}
+
+.feat-search-empty {
+    font-size: 12px;
+    color: #aaaaaa;
+    padding: 4px 2px;
+}
+
+.feat-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.feat-selected-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(255,165,51,0.12);
+    border: 1px solid rgba(255,165,51,0.5);
+    font-size: 12px;
+    color: #ffb55c;
+}
+
+.feat-selected-remove {
+    font-size: 13px;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.feat-selected-remove:hover {
+    opacity: 1;
+}
+.artist-actions{
+    display:flex;
+    gap:12px;
+    align-items:center;
+    margin-top:14px;
+  }
+  
+  .artist-play-main{
+    padding:10px 16px;
+    border-radius:999px;
+    border:0;
+    cursor:pointer;
+    font-weight:600;
+  }
+  
+  .artist-follow-btn{
+    padding:10px 14px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.15);
+    background:transparent;
+    color:#fff;
+    cursor:pointer;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+  
+  .artist-follow-btn .heart{
+    font-size:16px;
+    line-height:1;
+  }
+  
+  .artist-follow-btn.is-following{
+    border-color: rgba(255,255,255,.35);
+  }
+  .artist-btn-secondary.is-following {
+    border-color: rgba(255,255,255,.35);
+  }
+  
+  .artist-btn-secondary .artist-heart {
+    margin-right: 8px;
+    font-size: 16px;
+    line-height: 1;
+  }
+  

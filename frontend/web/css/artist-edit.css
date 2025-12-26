@@ -1,0 +1,275 @@
+/* --- Page wrapper --- */
+.artist-edit-page{
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+  
+  /* --- Header --- */
+  .artist-edit-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:24px;
+    margin-bottom:26px;
+  }
+  
+  .artist-edit-chip{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 12px;
+    border-radius:999px;
+    font-size:12px;
+    font-weight:700;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  
+    background: linear-gradient(
+      135deg,
+      rgba(255,180,80,.25),
+      rgba(255,120,80,.15)
+    );
+    border:1px solid rgba(255,180,80,.45);
+    color:#ffb050;
+    box-shadow:0 8px 24px rgba(255,150,80,.25);
+  }
+  
+  .artist-edit-title{
+    margin:12px 0 6px;
+    font-size:40px;
+    font-weight:900;
+    letter-spacing:-0.03em;
+  
+    background:linear-gradient(
+      180deg,
+      #ffffff,
+      rgba(255,255,255,.75)
+    );
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  
+  .artist-edit-subtitle{
+    max-width:620px;
+    line-height:1.5;
+    color:rgba(255,255,255,.75);
+  }
+  
+  /* --- Header actions --- */
+  .artist-edit-actions{
+    display:flex;
+    gap:12px;
+  }
+  
+  .artist-edit-action-btn{
+    padding:10px 14px;
+    border-radius:999px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.14);
+    color:rgba(255,255,255,.9);
+    text-decoration:none;
+    font-weight:600;
+  }
+  
+  .artist-edit-action-btn:hover{
+    background:rgba(255,255,255,.08);
+  }
+  
+  /* --- Card --- */
+  .artist-edit-card{
+    background:
+      radial-gradient(
+        1200px 400px at top left,
+        rgba(255,180,80,.06),
+        transparent 60%
+      ),
+      linear-gradient(
+        180deg,
+        rgba(255,255,255,.06),
+        rgba(255,255,255,.02)
+      );
+  
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:24px;
+    padding:22px;
+  
+    box-shadow:
+      0 30px 80px rgba(0,0,0,.6),
+      inset 0 1px 0 rgba(255,255,255,.06);
+  }
+  
+  /* --- Form fields --- */
+  .artist-edit-field{
+    margin-bottom:18px;
+  }
+  
+  .artist-edit-label{
+    display:block;
+    margin-bottom:6px;
+    font-size:13px;
+    opacity:.8;
+  }
+  
+  /* --- Inputs & textarea --- */
+  .artist-edit-input{
+    width:100%;
+    padding:14px 16px;
+    border-radius:14px;
+    font-size:15px;
+  
+    background:linear-gradient(
+      180deg,
+      rgba(0,0,0,.35),
+      rgba(0,0,0,.55)
+    );
+  
+    border:1px solid rgba(255,255,255,.10);
+    color:rgba(255,255,255,.95);
+    outline:none;
+  }
+  
+  .artist-edit-input::placeholder{
+    color:rgba(255,255,255,.45);
+  }
+  
+  .artist-edit-input:focus{
+    border-color:rgba(255,180,80,.75);
+    box-shadow:
+      0 0 0 4px rgba(255,180,80,.18),
+      0 12px 30px rgba(255,140,80,.25);
+  }
+  
+  /* --- Textarea --- */
+  .artist-edit-textarea{
+    min-height:140px;
+    resize:vertical;
+  }
+  
+  /* --- Actions row --- */
+  .artist-edit-actions-row{
+    display:flex;
+    gap:14px;
+    margin-top:20px;
+  }
+  
+  /* --- Save button (main) --- */
+  .artist-edit-save{
+    padding:13px 18px;
+    border-radius:16px;
+    font-weight:900;
+    letter-spacing:.02em;
+    border:none;
+    cursor:pointer;
+  
+    background:linear-gradient(
+      135deg,
+      #ffb050,
+      #ff7a50
+    );
+    color:#111;
+  
+    box-shadow:
+      0 20px 50px rgba(255,140,80,.45),
+      inset 0 1px 0 rgba(255,255,255,.4);
+  }
+  
+  .artist-edit-save:hover{
+    transform:translateY(-2px);
+    box-shadow:
+      0 28px 70px rgba(255,140,80,.6),
+      inset 0 1px 0 rgba(255,255,255,.5);
+  }
+  
+  /* --- Cancel button --- */
+  .artist-edit-cancel{
+    padding:13px 18px;
+    border-radius:16px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.14);
+    color:rgba(255,255,255,.85);
+    cursor:pointer;
+  }
+  
+  .artist-edit-cancel:hover{
+    background:rgba(255,255,255,.08);
+  }
+  .artist-edit-actions{
+    display:flex;
+    gap:12px;
+  }
+  
+  .artist-edit-action-btn{
+    padding:10px 14px;
+    border-radius:99px;
+    background:rgba(255,255,255,.04);
+    border:1px solid rgba(255,255,255,.14);
+    color:rgba(255,255,255,.9);
+    text-decoration:none;
+    font-weight:600;
+  }
+  
+  .artist-edit-action-btn:hover{
+    background:rgba(255,255,255,.08);
+  }
+  .artist-edit-action-btn--accent{
+    background:linear-gradient(135deg,#ffb050,#ff7a50);
+    color:#111;
+    border:none;
+    box-shadow:0 12px 30px rgba(255,140,80,.45);
+  }
+  /* ===============================
+   Artist action buttons (global)
+   =============================== */
+
+.artist-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  
+  /* Base button */
+  .artist-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  
+  /* Primary (orange) */
+  .artist-btn-primary {
+    background: linear-gradient(135deg, #ff9f55, #ff7a2f);
+    color: #111;
+    box-shadow: 0 6px 18px rgba(255, 140, 70, .35);
+  }
+  
+  .artist-btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 24px rgba(255, 140, 70, .45);
+  }
+  
+  /* Secondary (dark outline) */
+  .artist-btn-secondary {
+    background: rgba(255,255,255,.04);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.18);
+  }
+  
+  .artist-btn-secondary:hover {
+    background: rgba(255,255,255,.08);
+    border-color: rgba(255,255,255,.35);
+  }
+  
+  /* Icon spacing */
+  .artist-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+  
