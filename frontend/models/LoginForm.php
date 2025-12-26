@@ -8,56 +8,63 @@ use common\models\User;
 
 class LoginForm extends Model
 {
-    // form fields
-    public $email;
+    public $login;      // username OU email
     public $password;
     public $rememberMe = true;
 
-    // cached user
-    private ?User $_user = null;
+    private $_user = false;
 
     public function rules()
     {
         return [
-            [['email', 'password'], 'required'],
-            ['email', 'email'],
+            [['login', 'password'], 'required'],
+            [['login'], 'string', 'max' => 255],
             ['rememberMe', 'boolean'],
             ['password', 'validatePassword'],
         ];
     }
 
-    // validate password
+    public function attributeLabels()
+    {
+        return [
+            'login' => 'Username ou Email',
+            'password' => 'Palavra-passe',
+            'rememberMe' => 'Lembrar-me',
+        ];
+    }
+
     public function validatePassword($attribute, $params)
     {
-        if ($this->hasErrors()) {
-            return;
-        }
+        if ($this->hasErrors()) return;
 
         $user = $this->getUser();
-
         if (!$user || !$user->validatePassword($this->password)) {
-            $this->addError($attribute, 'Incorrect email or password.');
+            $this->addError($attribute, 'Username/Email ou palavra-passe inválidos.');
         }
     }
 
-    // login user
     public function login()
     {
-        if (!$this->validate()) {
-            return false;
+        if ($this->validate()) {
+            return Yii::$app->user->login($this->getUser(), $this->rememberMe ? 3600 * 24 * 30 : 0);
         }
-
-        return Yii::$app->user->login(
-            $this->getUser(),
-            $this->rememberMe ? 3600 * 24 * 30 : 0
-        );
+        return false;
     }
 
-    // get active user from model
-    protected function getUser(): ?User
+    protected function getUser()
     {
-        if ($this->_user === null) {
-            $this->_user = User::findByEmail($this->email);
+        if ($this->_user === false) {
+            $value = trim((string)$this->login);
+
+            // tenta por username primeiro
+            $user = User::findByUsername($value);
+
+            // se não existir, tenta por email
+            if (!$user && filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                $user = User::find()->where(['email' => $value])->one();
+            }
+
+            $this->_user = $user;
         }
 
         return $this->_user;

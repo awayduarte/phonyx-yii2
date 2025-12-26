@@ -4,6 +4,8 @@ namespace common\models;
 
 use Yii;
 use yii\web\IdentityInterface;
+use yii\web\UploadedFile;
+
 
 class User extends \yii\db\ActiveRecord implements IdentityInterface
 {
@@ -11,15 +13,19 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     // Roles
     // -----------------------
 
-    const ROLE_ADMIN  = 'admin';
+    const ROLE_ADMIN = 'admin';
     const ROLE_ARTIST = 'artist';
-    const ROLE_USER   = 'user';
+    const ROLE_USER = 'user';
 
     // -----------------------
-    // Virtual attributes
-    // -----------------------
+// Virtual attributes
+// -----------------------
 
     public $password;
+
+    /** @var \yii\web\UploadedFile|null Profile image upload */
+    public $profileFile;
+
 
     // -----------------------
     // Table
@@ -58,6 +64,15 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
                 'targetClass' => Asset::class,
                 'targetAttribute' => ['profile_asset_id' => 'id'],
             ],
+                // Profile image upload (optional)
+            [
+                ['profileFile'],
+                'file',
+                'skipOnEmpty' => true,
+                'extensions' => ['png', 'jpg', 'jpeg', 'webp'],
+                'maxSize' => 5 * 1024 * 1024,
+            ],
+
         ];
     }
 
@@ -251,9 +266,9 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     public static function optsRole()
     {
         return [
-            self::ROLE_ADMIN  => 'admin',
+            self::ROLE_ADMIN => 'admin',
             self::ROLE_ARTIST => 'artist',
-            self::ROLE_USER   => 'user',
+            self::ROLE_USER => 'user',
         ];
     }
 
