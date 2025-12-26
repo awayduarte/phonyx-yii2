@@ -11,6 +11,7 @@ class LoginForm extends Model
     public $password;
     public $rememberMe = true;
 
+
     private ?User $_user = null;
 
     public function rules()
@@ -49,6 +50,7 @@ class LoginForm extends Model
             $value = trim((string)$this->email);
 
             $this->_user = User::findByUsernameOrEmail($value);
+
         }
 
         return $this->_user;

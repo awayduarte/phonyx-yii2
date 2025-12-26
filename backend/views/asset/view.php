@@ -3,33 +3,72 @@
 use yii\helpers\Html;
 use yii\widgets\DetailView;
 
-/** @var yii\web\View $this */
-/** @var common\models\Asset $model */
+/**
+ * asset view
+ *
+ * @var yii\web\View $this
+ * @var common\models\Asset $model
+ */
 
-$this->title = $model->id;
+$this->title = 'Asset #' . $model->id;
 $this->params['breadcrumbs'][] = ['label' => 'Assets', 'url' => ['index']];
 $this->params['breadcrumbs'][] = $this->title;
-\yii\web\YiiAsset::register($this);
 ?>
+
 <div class="asset-view">
-    
+
     <p>
-        <?= Html::a('Update', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
-        <?= Html::a('Delete', ['delete', 'id' => $model->id], [
+        <?= Html::a('Atualizar', ['update', 'id' => $model->id], ['class' => 'btn btn-primary']) ?>
+        <?= Html::a('Apagar', ['delete', 'id' => $model->id], [
             'class' => 'btn btn-danger',
             'data' => [
-                'confirm' => 'Are you sure you want to delete this item?',
+                'confirm' => 'are you sure?',
                 'method' => 'post',
             ],
         ]) ?>
     </p>
 
+    <!-- asset preview -->
+    <div class="card mb-3">
+        <div class="card-header">
+            <strong>preview</strong>
+        </div>
+        <div class="card-body text-center">
+
+            <?php if ($model->isImage()): ?>
+                <?= Html::img(
+                    '@web/' . $model->path,
+                    [
+                        'class' => 'img-fluid rounded',
+                        'style' => 'max-height:300px'
+                    ]
+                ) ?>
+
+            <?php elseif ($model->isAudio()): ?>
+                <audio controls style="width:100%">
+                    <source src="<?= Yii::getAlias('@web/' . $model->path) ?>" type="audio/mpeg">
+                    your browser does not support audio playback
+                </audio>
+
+            <?php else: ?>
+                <?= Html::a(
+                    'download file',
+                    '@web/' . $model->path,
+                    ['class' => 'btn btn-outline-secondary']
+                ) ?>
+            <?php endif; ?>
+
+        </div>
+    </div>
+
+    <!-- asset details -->
     <?= DetailView::widget([
         'model' => $model,
         'attributes' => [
             'id',
-            'path',
             'type',
+            'path',
+            'created_by_user_id',
             'created_at',
             'updated_at',
         ],

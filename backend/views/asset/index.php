@@ -19,27 +19,63 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::a('Create Asset', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
+    <?php // echo $this->render('_search', ['model' => $searchModel]); 
+    ?>
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
+
+        // adminlte friendly pagination
+        'pager' => [
+            'class' => \yii\bootstrap4\LinkPager::class,
+            'options' => ['class' => 'pagination justify-content-center'],
+            'linkContainerOptions' => ['class' => 'page-item'],
+            'linkOptions' => ['class' => 'page-link'],
+            'disabledListItemSubTagOptions' => ['class' => 'page-link'],
+        ],
+
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
 
             'id',
-            'path',
             'type',
-            'created_at',
-            'updated_at',
+            'path',
+
             [
-                'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Asset $model, $key, $index, $column) {
+                'label' => 'used in',
+                'format' => 'raw',
+                'value' => function (Asset $model) {
+                    $used = [];
+
+                    if ($model->users) {
+                        $used[] = 'users';
+                    }
+                    if ($model->artists) {
+                        $used[] = 'artists';
+                    }
+                    if ($model->albums) {
+                        $used[] = 'albums';
+                    }
+                    if ($model->playlists) {
+                        $used[] = 'playlists';
+                    }
+                    if ($model->tracks) {
+                        $used[] = 'tracks';
+                    }
+
+                    return empty($used)
+                        ? '<span class="badge badge-secondary">unused</span>'
+                        : '<span class="badge badge-info">' . implode(', ', $used) . '</span>';
+                },
+            ],
+
+            [
+                'class' => ActionColumn::class,
+                'urlCreator' => function ($action, Asset $model) {
                     return Url::toRoute([$action, 'id' => $model->id]);
-                 }
+                }
             ],
         ],
     ]); ?>
-
-
 </div>

@@ -3,25 +3,50 @@
 use yii\helpers\Html;
 use yii\widgets\ActiveForm;
 
-/** @var yii\web\View $this */
-/** @var common\models\Asset $model */
-/** @var yii\widgets\ActiveForm $form */
+/**
+ * asset form
+ *
+ * @var yii\web\View $this
+ * @var common\models\Asset $model
+ * @var yii\widgets\ActiveForm $form
+ */
+
+$this->registerJsFile('@web/js/asset.js', [
+    'depends' => [\yii\web\JqueryAsset::class],
+]);
+
 ?>
 
 <div class="asset-form">
 
-    <?php $form = ActiveForm::begin(); ?>
+    <?php
+    // start form with multipart for file upload
+    $form = ActiveForm::begin([
+        'options' => ['enctype' => 'multipart/form-data']
+    ]);
+    ?>
 
-    <?= $form->field($model, 'path')->textInput(['maxlength' => true]) ?>
+    <?php
+    // custom styled file input 
+    ?>
+    <?= $form->field($model, 'file', [
+        'template' => "{label}
+        <div class=\"custom-file\">
+            {input}
+            <label class=\"custom-file-label\">choose file</label>
+        </div>
+        {error}",
+    ])->fileInput([
+        'class' => 'custom-file-input',
+        'accept' => 'image/*,audio/*',
+    ]) ?>
 
-    <?= $form->field($model, 'type')->dropDownList([ 'image' => 'Image', 'audio' => 'Audio', 'video' => 'Video', 'other' => 'Other', ], ['prompt' => '']) ?>
-
-    <?= $form->field($model, 'created_at')->textInput() ?>
-
-    <?= $form->field($model, 'updated_at')->textInput() ?>
-
-    <div class="form-group">
-        <?= Html::submitButton('Save', ['class' => 'btn btn-success']) ?>
+    <?php
+    // submit button
+    ?>
+    <div class="form-group mt-3">
+        <?= Html::submitButton('Salvar', ['class' => 'btn btn-success']) ?>
+        <?= Html::a('Cancelar', ['index'], ['class' => 'btn btn-secondary ml-2']) ?>
     </div>
 
     <?php ActiveForm::end(); ?>
