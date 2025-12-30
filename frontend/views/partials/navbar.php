@@ -18,7 +18,7 @@ if (!isset($displayName) && $identity) {
     <!-- LADO ESQUERDO: LOGO -->
     <div class="nav-left">
         <a href="<?= Url::to(['site/index']) ?>" class="nav-logo">
-            PHONYX
+            <img src="<?= Url::to('@web/phonyx_logo_lateral.png') ?>" alt="Phonyx">
         </a>
     </div>
 
