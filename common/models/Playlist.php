@@ -22,14 +22,18 @@ class Playlist extends \yii\db\ActiveRecord
 
             // fk -> user
             [
-                ['user_id'], 'exist', 'skipOnError' => true,
+                ['user_id'],
+                'exist',
+                'skipOnError' => true,
                 'targetClass' => User::class,
                 'targetAttribute' => ['user_id' => 'id']
             ],
 
             // fk -> cover asset
             [
-                ['cover_asset_id'], 'exist', 'skipOnError' => true,
+                ['cover_asset_id'],
+                'exist',
+                'skipOnError' => true,
                 'targetClass' => Asset::class,
                 'targetAttribute' => ['cover_asset_id' => 'id']
             ],
