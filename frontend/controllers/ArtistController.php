@@ -98,6 +98,7 @@ class ArtistController extends Controller
             'user' => $user,
             'tracks' => $tracks,
             'albums' => $albums,
+            'model' => $artist,
         ]);
     }
 
@@ -205,7 +206,7 @@ class ArtistController extends Controller
         $artist = $user->artist;
 
         if (!$artist) {
-            throw new \yii\web\NotFoundHttpException('Artist profile not found.');
+            throw new NotFoundHttpException('Artist profile not found.');
         }
 
         if ($artist->load(Yii::$app->request->post()) && $artist->save()) {
@@ -214,9 +215,10 @@ class ArtistController extends Controller
         }
 
         return $this->render('edit', [
-            'model' => $artist,
+            'model'  => $artist,
+            'artist' => $artist,
         ]);
+
+
     }
-
-
 }
