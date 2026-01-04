@@ -15,7 +15,17 @@ use yii\helpers\Url;
  */
 
 $this->title = 'Resultados da pesquisa';
+
+
+$defaultAvatar = Url::to('@web/images/default-avatar.png');
+$defaultCover  = Url::to('@web/images/default-cover.png');
+
+$pathToUrl = function (?string $path, string $fallback) {
+    if (!$path) return $fallback;
+    return Url::to('@web/' . ltrim($path, '/'));
+};
 ?>
+
 <div class="search-page">
 
     <h1 class="search-title">Resultados da pesquisa</h1>
@@ -24,12 +34,10 @@ $this->title = 'Resultados da pesquisa';
         <span>A pesquisar por</span>
         <strong>"<?= Html::encode($q) ?>"</strong>
     </div>
-    <div class="back-home-wrapper">
-    <a href="<?= \yii\helpers\Url::to(['site/index']) ?>" class="back-home-btn">
-        ← Voltar ao Home
-    </a>
-</div>
 
+    <div class="back-home-wrapper">
+        <a href="<?= Url::to(['site/index']) ?>" class="back-home-btn">← Voltar ao Home</a>
+    </div>
 
     <!-- barra para voltar a mudar a pesquisa -->
     <form action="<?= Url::to(['search/index']) ?>" method="get" class="search-inline-form">
@@ -41,17 +49,16 @@ $this->title = 'Resultados da pesquisa';
         <button type="submit" class="search-inline-btn">Procurar</button>
     </form>
 
-    <!-- tabs para filtrar o tipo de resultado -->
+    <!-- tabs -->
     <div class="search-tabs">
         <?php
-        // pequena função para eu não repetir html
         $tabs = [
-            'all'      => 'Tudo',
-            'artists'  => 'Artistas',
-            'tracks'   => 'Faixas',
-            'albums'   => 'Álbuns',
-            'playlists'=> 'Playlists',
-            'users'    => 'Perfis',
+            'all'       => 'Tudo',
+            'artists'   => 'Artistas',
+            'tracks'    => 'Faixas',
+            'albums'    => 'Álbuns',
+            'playlists' => 'Playlists',
+            'users'     => 'Perfis',
         ];
 
         foreach ($tabs as $tabKey => $label):
@@ -74,18 +81,33 @@ $this->title = 'Resultados da pesquisa';
             <?php else: ?>
                 <ul class="search-list">
                     <?php foreach ($artists as $artist): ?>
+                        <?php
+                            
+                            $avatarPath = $artist->user && $artist->user->profileAsset
+                                ? $artist->user->profileAsset->path
+                                : null;
+
+                            $avatarUrl = $pathToUrl($avatarPath, $defaultAvatar);
+                        ?>
                         <li class="search-item">
+                            <div class="search-thumb">
+                                <img src="<?= Html::encode($avatarUrl) ?>"
+                                     alt=""
+                                     onerror="this.src='<?= Html::encode($defaultAvatar) ?>'">
+                            </div>
+
                             <div class="search-item-main">
                                 <div class="search-item-title">
-                                    <?= Html::encode($artist->artist_name) ?>
+                                    <?= Html::encode($artist->stage_name ?? 'Unknown artist') ?>
                                 </div>
-                                <?php if ($artist->bio): ?>
+                                <?php if (!empty($artist->bio)): ?>
                                     <div class="search-item-sub">
                                         <?= Html::encode(mb_strimwidth($artist->bio, 0, 120, '…')) ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
-                            <a href="#"
+
+                            <a href="<?= Url::to(['artist/view', 'id' => $artist->id]) ?>"
                                class="search-item-pill">
                                 Ver artista
                             </a>
@@ -106,18 +128,37 @@ $this->title = 'Resultados da pesquisa';
             <?php else: ?>
                 <ul class="search-list">
                     <?php foreach ($tracks as $track): ?>
+                        <?php
+                           
+                            $coverPath = null;
+
+                            if ($track->album && $track->album->coverAsset) {
+                                $coverPath = $track->album->coverAsset->path;
+                            } elseif ($track->artist && $track->artist->user && $track->artist->user->profileAsset) {
+                                $coverPath = $track->artist->user->profileAsset->path;
+                            }
+
+                            $coverUrl = $pathToUrl($coverPath, $defaultCover);
+                        ?>
                         <li class="search-item">
+                            <div class="search-thumb">
+                                <img src="<?= Html::encode($coverUrl) ?>"
+                                     alt=""
+                                     onerror="this.src='<?= Html::encode($defaultCover) ?>'">
+                            </div>
+
                             <div class="search-item-main">
                                 <div class="search-item-title">
                                     <?= Html::encode($track->title) ?>
                                 </div>
                                 <?php if ($track->artist): ?>
                                     <div class="search-item-sub">
-                                        <?= Html::encode($track->artist->artist_name) ?>
+                                        <?= Html::encode($track->artist->stage_name ?? 'Unknown artist') ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
-                            <a href="#"
+
+                            <a href="<?= Url::to(['track/view', 'id' => $track->id]) ?>"
                                class="search-item-pill">
                                 Abrir faixa
                             </a>
@@ -138,18 +179,29 @@ $this->title = 'Resultados da pesquisa';
             <?php else: ?>
                 <ul class="search-list">
                     <?php foreach ($albums as $album): ?>
+                        <?php
+                            $coverPath = $album->coverAsset ? $album->coverAsset->path : null;
+                            $coverUrl  = $pathToUrl($coverPath, $defaultCover);
+                        ?>
                         <li class="search-item">
+                            <div class="search-thumb">
+                                <img src="<?= Html::encode($coverUrl) ?>"
+                                     alt=""
+                                     onerror="this.src='<?= Html::encode($defaultCover) ?>'">
+                            </div>
+
                             <div class="search-item-main">
                                 <div class="search-item-title">
                                     <?= Html::encode($album->title) ?>
                                 </div>
                                 <?php if ($album->artist): ?>
                                     <div class="search-item-sub">
-                                        <?= Html::encode($album->artist->artist_name) ?>
+                                        <?= Html::encode($album->artist->stage_name ?? 'Unknown artist') ?>
                                     </div>
                                 <?php endif; ?>
                             </div>
-                            <a href="#"
+
+                            <a href="<?= Url::to(['album/view', 'id' => $album->id]) ?>"
                                class="search-item-pill">
                                 Ver álbum
                             </a>
@@ -170,7 +222,17 @@ $this->title = 'Resultados da pesquisa';
             <?php else: ?>
                 <ul class="search-list">
                     <?php foreach ($playlists as $playlist): ?>
+                        <?php
+                            $coverPath = $playlist->coverAsset ? $playlist->coverAsset->path : null;
+                            $coverUrl  = $pathToUrl($coverPath, $defaultCover);
+                        ?>
                         <li class="search-item">
+                            <div class="search-thumb">
+                                <img src="<?= Html::encode($coverUrl) ?>"
+                                     alt=""
+                                     onerror="this.src='<?= Html::encode($defaultCover) ?>'">
+                            </div>
+
                             <div class="search-item-main">
                                 <div class="search-item-title">
                                     <?= Html::encode($playlist->title) ?>
@@ -181,7 +243,8 @@ $this->title = 'Resultados da pesquisa';
                                     </div>
                                 <?php endif; ?>
                             </div>
-                            <a href="#"
+
+                            <a href="<?= Url::to(['playlist/view', 'id' => $playlist->id]) ?>"
                                class="search-item-pill">
                                 Abrir playlist
                             </a>
@@ -202,7 +265,17 @@ $this->title = 'Resultados da pesquisa';
             <?php else: ?>
                 <ul class="search-list">
                     <?php foreach ($users as $user): ?>
+                        <?php
+                            $avatarPath = $user->profileAsset ? $user->profileAsset->path : null;
+                            $avatarUrl  = $pathToUrl($avatarPath, $defaultAvatar);
+                        ?>
                         <li class="search-item">
+                            <div class="search-thumb">
+                                <img src="<?= Html::encode($avatarUrl) ?>"
+                                     alt=""
+                                     onerror="this.src='<?= Html::encode($defaultAvatar) ?>'">
+                            </div>
+
                             <div class="search-item-main">
                                 <div class="search-item-title">
                                     <?= Html::encode($user->username) ?>
@@ -211,7 +284,8 @@ $this->title = 'Resultados da pesquisa';
                                     Utilizador PHONYX
                                 </div>
                             </div>
-                            <a href="#"
+
+                            <a href="<?= Url::to(['profile/view', 'id' => $user->id]) ?>"
                                class="search-item-pill">
                                 Ver perfil
                             </a>

@@ -21,7 +21,7 @@ $this->title = 'Tracks | PHONYX';
         <section class="tracks-genre-block">
             <header class="tracks-genre-header">
                 <h2 class="tracks-genre-name">
-                <?= Html::encode($genre->name) ?>
+                    <?= Html::encode($genre->name) ?>
                 </h2>
             </header>
 
@@ -34,22 +34,22 @@ $this->title = 'Tracks | PHONYX';
                 <div class="tracks-list">
                     <?php foreach ($tracks as $track): ?>
                         <?php
-                            // Audio URL: stored in Asset table and linked by track.audio_asset_id
-                            $audioUrl = null;
-                            if ($track->audioAsset && !empty($track->audioAsset->path)) {
-                                // Asset path is expected to be like: /uploads/tracks/track_xxx.mp3
-                                $audioUrl = Yii::getAlias('@web') . $track->audioAsset->path;
-                            }
+                        // Audio URL: stored in Asset table and linked by track.audio_asset_id
+                        $audioUrl = null;
+                        if ($track->audioAsset && !empty($track->audioAsset->path)) {
+                            // Asset path is expected to be like: /uploads/tracks/track_xxx.mp3
+                            $audioUrl = Yii::getAlias('@web') . $track->audioAsset->path;
+                        }
 
-                            // Cover URL: track does not have cover_path in your DB schema.
-                            // Use a default cover for now (you can later link a cover asset if you add cover_asset_id).
-                            $coverUrl = Yii::getAlias('@web') . '/img/default-cover.png';
+                        // Cover URL: track does not have cover_path in your DB schema.
+                        // Use a default cover for now (you can later link a cover asset if you add cover_asset_id).
+                        $coverUrl = Yii::getAlias('@web') . '/img/default-cover.png';
 
-                            // Main artist name (via relation)
-                            $artistName = $track->artist ? ($track->artist->artist_name ?? $track->artist->stage_name ?? 'Unknown artist') : 'Unknown artist';
+                        // Main artist name (via relation)
+                        $artistName = $track->artist ? ($track->artist->artist_name ?? $track->artist->stage_name ?? 'Unknown artist') : 'Unknown artist';
 
-                            // Link to track view page
-                            $trackUrl = Url::to(['track/view', 'id' => $track->id]);
+                        // Link to track view page
+                        $trackUrl = Url::to(['track/view', 'id' => $track->id]);
                         ?>
 
                         <div class="track-row">
@@ -76,17 +76,16 @@ $this->title = 'Tracks | PHONYX';
                                         <?= Html::encode($track->duration) ?>
                                     </span>
                                 <?php endif; ?>
+                                <button class="add-to-playlist-btn" data-track-id="<?= $track->id ?>">
+                                    ➕ Playlist
+                                </button>
 
                                 <?php if ($audioUrl): ?>
-                                    <button
-                                        type="button"
-                                        class="track-play-btn"
-                                        data-id="<?= (int)$track->id ?>"
+
+                                    <button type="button" class="track-play-btn" data-id="<?= (int) $track->id ?>"
                                         data-audio="<?= Html::encode($audioUrl) ?>"
                                         data-title="<?= Html::encode($track->title ?? '') ?>"
-                                        data-artist="<?= Html::encode($artistName) ?>"
-                                        data-cover="<?= Html::encode($coverUrl) ?>"
-                                    >
+                                        data-artist="<?= Html::encode($artistName) ?>" data-cover="<?= Html::encode($coverUrl) ?>">
                                         ▶
                                     </button>
                                 <?php else: ?>
@@ -155,8 +154,18 @@ $this->registerJs(<<<JS
   window.addEventListener('phonyx:play', updateButtons);
   window.addEventListener('phonyx:pause', updateButtons);
 
+  document.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const trackId = btn.dataset.trackId;
+        openPlaylistModal(trackId);
+    });
+});
+
+
   // Initial render
   updateButtons();
 })();
+
+
 JS);
 ?>

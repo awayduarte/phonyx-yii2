@@ -56,7 +56,7 @@ JS);
                     'autofocus' => true,
                     'placeholder' => 'O teu username ou email',
                 ])
-                ->label('Username ou Email') ?>
+                ->label('Email') ?>
 
             <?= $form->field($model, 'password')
                 ->passwordInput([

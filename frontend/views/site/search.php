@@ -21,21 +21,15 @@ $tabs = [
         <h1 class="search-title">Pesquisar</h1>
 
         <form class="search-bar" method="get" action="<?= Url::to(['site/search']) ?>">
-            <input
-                class="search-input"
-                type="text"
-                name="q"
-                value="<?= Html::encode($q) ?>"
-                placeholder="O que queres ouvir?"
-                autocomplete="off"
-            />
+            <input class="search-input" type="text" name="q" value="<?= Html::encode($q) ?>"
+                placeholder="O que queres ouvir?" autocomplete="off" />
             <input type="hidden" name="type" value="<?= Html::encode($type ?: 'all') ?>">
         </form>
 
         <div class="search-tabs">
             <?php foreach ($tabs as $key => $label): ?>
                 <a class="search-tab <?= $type === $key ? 'active' : '' ?>"
-                   href="<?= Url::to(['site/search', 'q' => $q, 'type' => $key]) ?>">
+                    href="<?= Url::to(['site/search', 'q' => $q, 'type' => $key]) ?>">
                     <?= Html::encode($label) ?>
                 </a>
             <?php endforeach; ?>
@@ -54,25 +48,21 @@ $tabs = [
             <?php else: ?>
                 <?php foreach ($tracks as $t): ?>
                     <?php
-                        // Audio URL comes from Asset table: track.audioAsset.path
-                        $audioUrl = ($t->audioAsset && !empty($t->audioAsset->path))
-                            ? Yii::getAlias('@web') . $t->audioAsset->path
-                            : '';
 
-                        // Artist name comes from Artist table: stage_name
-                        $artistName = $t->artist ? ($t->artist->stage_name ?? 'Unknown artist') : 'Unknown artist';
+                    $audioUrl = ($t->audioAsset && !empty($t->audioAsset->path))
+                        ? Yii::getAlias('@web') . $t->audioAsset->path
+                        : '';
 
-                        // Default cover (track does not have cover_path in your schema)
-                        $coverUrl = Yii::getAlias('@web') . '/img/default-cover.png';
+
+                    $artistName = $t->artist ? ($t->artist->stage_name ?? 'Unknown artist') : 'Unknown artist';
+
+                    $coverUrl = Yii::getAlias('@web') . '/img/default-cover.png';
                     ?>
 
-                    <a class="song-row"
-                       href="<?= Url::to(['track/view', 'id' => $t->id]) ?>"
-                       data-track-id="<?= (int)$t->id ?>"
-                       data-audio-src="<?= Html::encode($audioUrl) ?>"
-                       data-title="<?= Html::encode($t->title ?? '') ?>"
-                       data-artist="<?= Html::encode($artistName) ?>"
-                       data-cover="<?= Html::encode($coverUrl) ?>">
+                    <a class="song-row" href="<?= Url::to(['track/view', 'id' => $t->id]) ?>"
+                        data-track-id="<?= (int) $t->id ?>" data-audio-src="<?= Html::encode($audioUrl) ?>"
+                        data-title="<?= Html::encode($t->title ?? '') ?>" data-artist="<?= Html::encode($artistName) ?>"
+                        data-cover="<?= Html::encode($coverUrl) ?>">
 
                         <div class="song-cover"></div>
 
@@ -88,7 +78,7 @@ $tabs = [
         </div>
     </div>
 
-    <!-- FEATURING (sample cards) -->
+
     <div class="search-section">
         <div class="search-section-title"></div>
 
@@ -107,30 +97,44 @@ $tabs = [
 
             <?php $artists = $results['artists'] ?? []; ?>
             <?php foreach (array_slice($artists, 0, 2) as $a): ?>
+
+                <?php
+                $defaultAvatar = Url::to('@web/images/default-avatar.png');
+
+
+                $path = $a->user->avatar ?? null;
+
+                $avatarUrl = $path
+                    ? Url::to('@web/' . ltrim($path, '/'))
+                    : $defaultAvatar;
+                ?>
+
                 <a class="feat-card" href="<?= Url::to(['artist/view', 'id' => $a->id]) ?>">
-                    <div class="feat-cover"></div>
-                    <div>
-                        <div class="feat-type">ARTIST</div>
-                        <div class="feat-title"><?= Html::encode($a->stage_name ?? 'Unknown artist') ?></div>
-                        <div class="feat-sub">By PHONYX</div>
-                    </div>
+                    <div class="feat-cover">
+                        <div>
+                            <div class="feat-type">ARTIST</div>
+                            <div class="feat-title"><?= Html::encode($a->stage_name ?? 'Unknown artist') ?></div>
+                            <div class="feat-sub">By PHONYX</div>
+                        </div>
                 </a>
+
             <?php endforeach; ?>
+
         </div>
     </div>
 </div>
 
 <?php
-// Use the global player hook (same approach as tracks/index page)
+
 $js = <<<JS
 document.addEventListener('click', function(e) {
   const row = e.target.closest('.song-row');
   if (!row) return;
 
   const src = row.getAttribute('data-audio-src');
-  if (!src) return; // no audio -> allow navigation to track/view
+  if (!src) return; 
 
-  // If you have a global player function, use it
+
   if (typeof window.phonyxSetTrack === 'function') {
     e.preventDefault();
 

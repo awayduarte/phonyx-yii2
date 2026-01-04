@@ -25,27 +25,28 @@ if (!isset($displayName) && $identity) {
     <!-- CENTRO: MENU PRINCIPAL -->
     <nav class="nav-center">
         <a href="<?= Url::to(['site/index']) ?>"
-           class="nav-link <?= Yii::$app->controller->id === 'site' && Yii::$app->controller->action->id === 'index' ? 'active' : '' ?>">
+            class="nav-link <?= Yii::$app->controller->id === 'site' && Yii::$app->controller->action->id === 'index' ? 'active' : '' ?>">
             Home
         </a>
 
         <a href="<?= Url::to(['track/index']) ?>"
-           class="nav-link <?= Yii::$app->controller->id === 'track' ? 'active' : '' ?>">
+            class="nav-link <?= Yii::$app->controller->id === 'track' ? 'active' : '' ?>">
             Tracks
         </a>
 
         <a href="<?= Url::to(['site/about']) ?>"
-           class="nav-link <?= Yii::$app->controller->id === 'site' && Yii::$app->controller->action->id === 'about' ? 'active' : '' ?>">
+            class="nav-link <?= Yii::$app->controller->id === 'site' && Yii::$app->controller->action->id === 'about' ? 'active' : '' ?>">
             About
         </a>
 
-        <a href="<?= Url::to(['site/how-it-works']) ?>"
-           class="nav-link <?= Yii::$app->controller->id === 'site' && Yii::$app->controller->action->id === 'how-it-works' ? 'active' : '' ?>">
-            How it works
+        <a href="<?= Url::to(['playlist/discover']) ?>"
+            class="nav-link <?= Yii::$app->controller->id === 'playlist' && Yii::$app->controller->action->id === 'discover' ? 'active' : '' ?>">
+            Playlists
         </a>
 
+
         <a href="<?= Url::to(['site/search']) ?>"
-           class="nav-link <?= Yii::$app->controller->id === 'site' && Yii::$app->controller->action->id === 'search' ? 'active' : '' ?>">
+            class="nav-link <?= Yii::$app->controller->id === 'site' && Yii::$app->controller->action->id === 'search' ? 'active' : '' ?>">
             Search
         </a>
     </nav>
@@ -74,9 +75,7 @@ if (!isset($displayName) && $identity) {
                     <a href="<?= Url::to(['user/profile']) ?>" class="user-dropdown-item">Perfil</a>
                     <a href="<?= Url::to(['user/settings']) ?>" class="user-dropdown-item">Definições</a>
                     <div class="user-dropdown-divider"></div>
-                    <a href="<?= Url::to(['site/logout']) ?>"
-                       data-method="post"
-                       class="user-dropdown-item logout">
+                    <a href="<?= Url::to(['site/logout']) ?>" data-method="post" class="user-dropdown-item logout">
                         Terminar sessão
                     </a>
                 </div>

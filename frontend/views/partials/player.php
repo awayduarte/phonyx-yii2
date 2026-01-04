@@ -203,7 +203,7 @@ $this->registerJs(<<<JS
     audio.src = opts.src;
     audio.currentTime = 0;
 
-    // autoplay por default, só não toca se opts.autoplay === false
+   
     if (opts.autoplay === false) {
       audio.pause();
     } else {
@@ -227,7 +227,6 @@ $this->registerJs(<<<JS
       }
     }
 
-    // aceita tanto opts.trackId como opts.id
     var tid = (typeof opts.trackId !== 'undefined' && opts.trackId !== null && opts.trackId !== '')
               ? opts.trackId
               : (opts.id || '');
@@ -251,7 +250,7 @@ $this->registerJs(<<<JS
       cover: '',
       trackId: '',
       isLiked: false,
-      autoplay: false    // não começa logo a tocar
+      autoplay: false    
     });
   }
 })();

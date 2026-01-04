@@ -2,6 +2,8 @@
 /** @var yii\web\View $this */
 /** @var \frontend\models\EditProfileForm $model */
 /** @var \common\models\User $user */
+/** @var common\models\Artist $model */
+
 
 use yii\helpers\Html;
 use yii\helpers\Url;
@@ -13,7 +15,7 @@ $this->registerCssFile(
     ['depends' => [\frontend\assets\AppAsset::class]]
 );
 
-// Current profile picture (fallback)
+
 $avatarUrl = Yii::getAlias('@web') . '/img/default-avatar.png';
 if ($user->profileAsset && !empty($user->profileAsset->path)) {
     $avatarUrl = Yii::getAlias('@web') . $user->profileAsset->path;
@@ -58,7 +60,7 @@ if ($user->profileAsset && !empty($user->profileAsset->path)) {
             <?php $form = ActiveForm::begin([
                 'options' => [
                     'class' => 'settings-form',
-                    // Required for file uploads
+                
                     'enctype' => 'multipart/form-data',
                 ],
             ]); ?>
@@ -75,7 +77,7 @@ if ($user->profileAsset && !empty($user->profileAsset->path)) {
                     ->textInput(['maxlength' => true]) ?>
             </div>
 
-            <!-- Custom file upload UI (keeps the real input hidden) -->
+           
             <div class="settings-field">
                 <label class="form-label">Foto de perfil</label>
 
@@ -101,7 +103,7 @@ if ($user->profileAsset && !empty($user->profileAsset->path)) {
                     ]) ?>
             </div>
 
-            <!-- Save button -->
+                        
             <div class="settings-actions">
                 <button type="submit" class="btn btn-accent settings-btn-save">
                     Save changes
@@ -137,7 +139,7 @@ $this->registerJs(<<<JS
       var file = input.files && input.files[0] ? input.files[0] : null;
       filename.textContent = file ? file.name : 'No file selected';
 
-      // Preview image if possible
+    
       if (file && preview && file.type && file.type.indexOf('image/') === 0) {
         var url = URL.createObjectURL(file);
         preview.src = url;
