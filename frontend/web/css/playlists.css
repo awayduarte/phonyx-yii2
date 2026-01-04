@@ -1,0 +1,280 @@
+/* ====== PAGE ====== */
+.playlist-page { color:#fff; }
+.playlist-body { padding-top: 18px; }
+
+/* ====== HERO ====== */
+.playlist-hero{
+  padding: 34px 0 22px 0;
+  background: linear-gradient(180deg, rgba(80,80,80,.55), rgba(0,0,0,0));
+}
+.playlist-hero-inner{
+  display:flex;
+  gap:18px;
+  align-items:flex-end;
+}
+
+/* COVER */
+.cover-btn{
+  width: 190px;
+  aspect-ratio: 1/1;
+  border-radius: 14px;
+  background:#151515;
+  overflow:hidden;
+  border:0;
+  padding:0;
+  position:relative;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  box-shadow: 0 18px 50px rgba(0,0,0,.45);
+}
+.cover-btn img{ width:100%; height:100%; object-fit:cover; display:block; }
+.cover-placeholder{ font-size: 60px; color:#666; }
+
+.cover-overlay{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; gap:6px;
+  align-items:center; justify-content:center;
+  background: rgba(0,0,0,.55);
+  opacity:0; transition:opacity .15s ease;
+  font-weight:700; font-size:13px;
+}
+.cover-btn:hover .cover-overlay{ opacity:1; }
+.cover-icon{ font-size:22px; }
+
+.playlist-type{
+  font-size:12px;
+  opacity:.75;
+  letter-spacing:.12em;
+}
+.playlist-title{
+  font-size: 54px;
+  font-weight: 900;
+  margin: 6px 0 0 0;
+  line-height: 1.05;
+}
+.playlist-desc{
+  opacity:.8;
+  margin-top: 8px;
+  max-width: 680px;
+}
+
+/* HERO CTA (buttons) */
+.playlist-hero-cta{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  margin-top: 14px;
+}
+.btn-play-big{
+  width:56px; height:56px;
+  border-radius:999px;
+  border:0;
+  font-weight:900;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  background:#f0a020;
+  color:#111;
+  box-shadow: 0 12px 30px rgba(0,0,0,.45);
+}
+.btn-play-big:disabled{ opacity:.5; cursor:not-allowed; }
+
+.btn-icon{
+  width:44px; height:44px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color:#fff;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+.btn-icon:disabled{ opacity:.5; cursor:not-allowed; }
+
+/* ====== FIND BOX ====== */
+.pl-find-box{
+  margin-top: 18px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  padding: 16px;
+}
+.pl-find-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.pl-find-title{
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0;
+}
+.pl-find-close{
+  width: 36px; height: 36px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color: #fff;
+}
+
+.pl-find-search{
+  margin-top: 12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  background: rgba(0,0,0,.35);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 999px;
+  padding: 10px 14px;
+}
+.pl-find-icon{ opacity:.85; }
+.pl-find-input{
+  flex:1;
+  background: transparent;
+  border:0;
+  outline: none;
+  color:#fff;
+  font-size: 14px;
+}
+.pl-find-input::placeholder{ color: rgba(255,255,255,.55); }
+.pl-find-clear{
+  width: 34px; height: 34px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.06);
+  color:#fff;
+}
+
+/* results */
+.pl-find-results{
+  margin-top: 12px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.plr-empty{
+  opacity:.7;
+  padding: 10px 8px;
+  font-size: 13px;
+}
+
+.plr-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: rgba(0,0,0,.25);
+  border: 1px solid rgba(255,255,255,.06);
+}
+.plr-cover{
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  object-fit: cover;
+  background:#222;
+  flex: 0 0 46px;
+}
+.plr-meta{ flex:1; min-width:0; }
+.plr-title{
+  font-weight: 800;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.plr-sub{
+  opacity:.75;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.plr-btn{
+  border-radius: 999px;
+  padding: 8px 14px;
+  border: 1px solid rgba(255,255,255,.18);
+  background: transparent;
+  color:#fff;
+  font-weight: 700;
+}
+
+/* ====== TRACK LIST ====== */
+.tracks-head{
+  margin-top: 18px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.track-list{
+  margin-top: 10px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.track-row{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 16px;
+}
+.track-idx{
+  width: 26px;
+  opacity:.75;
+  font-weight:700;
+}
+.track-main{ flex:1; min-width:0; }
+.track-name{
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.track-sub{
+  opacity:.75;
+  font-size: 12px;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.track-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.btnTrackPlay{
+  width: 44px; height: 44px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.06);
+  color:#fff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+}
+.btnTrackRemove{
+  border-radius: 999px;
+  padding: 10px 14px;
+  border: 1px solid rgba(255,255,255,.14);
+  background: transparent;
+  color:#fff;
+  font-weight: 700;
+}
+
+/* empty */
+.empty-box{
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.06);
+  opacity:.9;
+}
