@@ -1,6 +1,6 @@
 :root {
-    --page-bg: #131313;         /* fundo geral da página */
-    --hero-bg: #0f0f0f;         /* fundo principal do site */
+    --page-bg: #131313;        
+    --hero-bg: #0f0f0f;         
     --accent: #ffa533;
     --accent-soft: #ffcc7a;
     --text-main: #222222;
@@ -22,21 +22,20 @@ body {
     background: var(--page-bg);
     color: var(--text-main);
     font-family: var(--font-main);
-    padding-bottom: 96px; /* espaço p/ não ficar nada escondido atrás do player */
+    padding-bottom: 96px;
 }
 
-/* Agora a secção principal é o SITE inteiro, full-width */
 .phonyx-hero {
     width: 100%;
-    min-height: 100vh;                 /* ocupa a altura toda do ecrã */
+    min-height: 100vh;                 
     background: var(--hero-bg);
-    border-radius: 0;                  /* sem cartão arredondado */
-    box-shadow: none;                  /* sem sombra gigante */
-    padding: 28px 72px 60px;           /* respiro lateral/topo */
+    border-radius: 0;                  
+    box-shadow: none;                  
+    padding: 28px 72px 60px;           
     box-sizing: border-box;
 }
 
-/* Contentor interior com largura máxima para não ficar gigante em monitores grandes */
+
 .phonyx-hero > * {
     max-width: 1400px;
     margin-left: auto;
@@ -69,7 +68,7 @@ body {
     font-weight: 700;
     font-size: 18px;
 }
-/* ==== NAVBAR PHONYX (FINAL) ==== */
+/* ==== NAVBAR ==== */
 
 .phonyx-navbar {
     width: 100%;
@@ -84,7 +83,7 @@ body {
     z-index: 999;
 }
 
-/* logo à esquerda */
+/* logo left */
 .nav-left {
     flex: 1;
     display: flex;
@@ -100,7 +99,19 @@ body {
     font-size: 15px;
 }
 
-/* pill central */
+.nav-logo img {
+    height: 36px;
+    width: auto;
+    opacity: 0.95;
+    transition: 0.2s;
+}
+
+.nav-logo:hover img {
+    opacity: 1;
+    transform: scale(1.04);
+}
+
+/* center pill */
 .nav-center {
     display: flex;
     gap: 28px;
@@ -126,17 +137,17 @@ body {
     background: rgba(255,255,255,0.12);
 }
 
-/* ==== AUTH BUTTONS DA NAVBAR ==== */
+/* === AUTH BUTTONS === */
 
 .nav-right {
     flex: 1;
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    gap: 14px;
+    gap: 16px;
 }
 
-/* Sign up + Login na navbar */
+/* Sign up + Login buttons */
 .nav-signup-btn,
 .nav-login-btn {
     text-decoration: none;
@@ -150,7 +161,7 @@ body {
     transition: 0.18s ease;
 }
 
-/* Sign up (ghost, discreto) */
+/* Sign up button */
 .nav-signup-btn {
     background: transparent;
     color: #f5f5f5;
@@ -162,7 +173,7 @@ body {
     background: rgba(255,255,255,0.08);
 }
 
-/* Login (pill laranja, a condizer com o site) */
+/* Login button */
 .nav-login-btn {
     background: var(--accent);
     color: #1f1305;
@@ -175,15 +186,14 @@ body {
     box-shadow: 0 18px 40px rgba(0,0,0,0.75);
 }
 
-
-/* === HERO / CÍRCULOS === */
+/* === HERO / CIRCLES === */
 
 .hero-wrapper {
     margin-top: 50px;
     position: relative;
 }
 
-/* letras gigantes P X atrás */
+/* background letters */
 .bg-letters {
     position: absolute;
     top: -10px;
@@ -251,18 +261,18 @@ body {
     color: #ffffff;
 }
 
-/* título principal dentro do círculo */
+/* main title */
 .track-title {
     margin: 0;
     font-size: 34px;
     line-height: 1.1;
     font-weight: 700;
-    letter-spacing: 0.18em;     /* letras mais espaçadas tipo logo */
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: #ffffff;
 }
 
-/* subtítulo BY PHONYX ORIGINALS */
+/* subtitle */
 .track-subtitle {
     margin-top: 10px;
     margin-bottom: 18px;
@@ -272,7 +282,7 @@ body {
     color: rgba(255,255,255,0.7);
 }
 
-/* botão Play estilo premium */
+/* play button */
 .btn-play {
     margin-top: 4px;
     padding: 10px 26px;
@@ -294,12 +304,12 @@ body {
     font-size: 13px;
 }
 
-/* Right circle – aqui podes trocar a imagem depois */
+/* Right circle */
 .circle-right {
     background: url('/img/kendrick-circle');
-    background-size: cover;           /* preenche todo o círculo */
-    background-position: center;      /* centra a imagem */
-    background-repeat: no-repeat;     /* sem repetir */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     filter: contrast(1.1) brightness(0.95);
 }
 
@@ -419,9 +429,8 @@ body {
     }
 }
 
-/* === MUSIC PLAYER FIXO === */
+/* === FIXED MUSIC PLAYER === */
 
-/* player-shell agora é rodapé fixo */
 .player-shell {
     position: fixed;
     left: 50%;
@@ -444,7 +453,6 @@ body {
     color: #ffffff;
 }
 
-/* botão de minimizar */
 .player-toggle {
     border: none;
     background: rgba(255,255,255,0.08);
@@ -460,7 +468,6 @@ body {
     margin-left: 4px;
 }
 
-/* estado colapsado: fica tipo mini-bar */
 .player-shell.collapsed .player-center,
 .player-shell.collapsed .player-right {
     display: none;
@@ -475,7 +482,7 @@ body {
     bottom: 10px;
 }
 
-/* LEFT */
+/* === PLAYER LEFT === */
 
 .player-left {
     display: flex;
@@ -508,7 +515,7 @@ body {
     color: #b9bbcf;
 }
 
-/* CENTER */
+/* === PLAYER CENTER === */
 
 .player-center {
     flex: 1;
@@ -588,7 +595,7 @@ body {
     background: linear-gradient(90deg, var(--accent), var(--accent-soft));
 }
 
-/* RIGHT */
+/* === PLAYER RIGHT === */
 
 .player-right {
     display: flex;
@@ -607,7 +614,6 @@ body {
     background: transparent;
 }
 
-/* slider track */
 #player-volume::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 999px;
@@ -619,7 +625,6 @@ body {
     background: rgba(255,255,255,0.22);
 }
 
-/* slider thumb */
 #player-volume::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
@@ -660,9 +665,8 @@ body {
     }
 }
 
-/* === SEÇÕES EXTRAS HOME PHONYX === */
+/* === EXTRA SECTIONS === */
 
-/* GENÉRICO DAS NOVAS SEÇÕES */
 .section {
     margin-top: 48px;
     padding: 32px 0;
@@ -689,7 +693,7 @@ body {
     font-size: 13px;
 }
 
-/* === CONTINUAR A OUVIR / ÚLTIMAS FAIXAS === */
+/* === CONTINUE LISTENING / LATEST TRACKS === */
 
 .continue-grid {
     display: grid;
@@ -751,8 +755,6 @@ body {
     border: 1px solid rgba(0,0,0,0.12);
     color: var(--text-main);
 }
-
-/* lista lado direito */
 
 .continue-list {
     background: #ffffff;
@@ -820,7 +822,7 @@ body {
     cursor: pointer;
 }
 
-/* === MOOD / GÉNERO === */
+/* === MOOD / GENRE === */
 
 .mood-section {
     padding-top: 24px;
@@ -849,7 +851,7 @@ body {
     transform: translateY(-1px);
 }
 
-/* === TOP DO MOMENTO === */
+/* === TOP TRENDING === */
 
 .top-list {
     display: flex;
@@ -889,7 +891,7 @@ body {
     gap: 2px;
 }
 
-/* === BLOCO ESPECIAL PARA ARTISTAS === */
+/* === ARTIST BLOCK === */
 
 .artist-cta {
     margin-top: 56px;
@@ -928,7 +930,7 @@ body {
     color: var(--accent);
 }
 
-/* === COMO FUNCIONA EM 3 PASSOS === */
+/* === HOW IT WORKS IN 3 STEPS === */
 
 .how-grid {
     display: grid;
@@ -970,7 +972,7 @@ body {
     font-weight: 600;
 }
 
-/* === PREVIEW DA APP MOBILE === */
+/* === MOBILE APP PREVIEW === */
 
 .mobile-preview {
     margin-top: 56px;
@@ -1043,7 +1045,7 @@ body {
     color: var(--accent);
 }
 
-/* === FOOTER TECH VIBES === */
+/* === FOOTER === */
 
 .site-footer {
     margin-top: 48px;
@@ -1099,7 +1101,7 @@ body {
     font-size: 11px;
 }
 
-/* === RESPONSIVE DAS NOVAS SECÇÕES === */
+/* === RESPONSIVE SECTIONS === */
 
 @media (max-width: 900px) {
     .continue-grid,
@@ -1144,7 +1146,7 @@ body {
     }
 }
 
-/* === USER BAR — IGUAL À NAVBAR PRINCIPAL === */
+/* === USER BAR === */
 
 .user-bar {
     display: flex;
@@ -1170,7 +1172,7 @@ body {
     background: rgba(0,0,0,0.06);
 }
 
-    /* ========== PROFILE PAGE ========== */
+/* === PROFILE PAGE === */
 
 .profile-page {
     max-width: 1100px;
@@ -1182,6 +1184,7 @@ body {
     display: flex;
     gap: 24px;
     align-items: center;
+    justify-content: flex-start;
     margin-bottom: 32px;
 }
 
@@ -1268,7 +1271,7 @@ body {
     padding-inline: 16px;
 }
 
-/* GRID DOS CARDS */
+/* === PROFILE GRID === */
 
 .profile-grid {
     margin-top: 24px;
@@ -1328,7 +1331,7 @@ body {
     background: rgba(255, 165, 51, 0.12);
 }
 
-/* Segurança */
+/* === PROFILE SECURITY === */
 
 .profile-security-row {
     display: flex;
@@ -1372,16 +1375,8 @@ body {
 .edit-profile-page .edit-profile-form-section {
     margin-top: 10px;
 }
- /* CREAT ARTIST AC*/
-/* header do perfil em linha */
-.profile-header {
-    display: flex;
-    gap: 24px;
-    align-items: center;
-    justify-content: flex-start;
-}
+/* CREATE ARTIST ACCOUNT */
 
-/* container da parte direita (info + botão artista) */
 .profile-header-main {
     display: flex;
     align-items: flex-start;
@@ -1390,7 +1385,6 @@ body {
     gap: 24px;
 }
 
-/* botão redondo grande de artista */
 .profile-artist-button {
     display: flex;
     align-items: center;
@@ -1413,8 +1407,7 @@ body {
     transform: translateY(-2px);
     box-shadow: 0 22px 42px rgba(255, 159, 47, 0.55);
 }
-/* create */
-/* ====== PÁGINA CRIAR CONTA ARTISTA ====== */
+/* === CREATE ARTIST ACCOUNT PAGE === */
 
 .artist-auth-page {
     min-height: calc(100vh - 80px);
@@ -1424,7 +1417,6 @@ body {
     padding: 40px 16px;
 }
 
-/* Card central*/
 .artist-auth-card {
     background: #2b221b;             
     border-radius: 24px;
@@ -1448,8 +1440,6 @@ body {
     color: #c2b4a6;
     margin: 0 0 22px;
 }
-
-/* campos */
 
 .artist-auth-form {
     display: flex;
@@ -1495,15 +1485,11 @@ body {
     resize: vertical;
 }
 
-/* erros */
-
 .artist-auth-error {
     font-size: 11px;
     color: #ffb0b0;
     min-height: 14px;
 }
-
-/* botão */
 
 .artist-auth-actions {
     margin-top: 18px;
@@ -1528,32 +1514,20 @@ body {
     box-shadow: 0 22px 48px rgba(0, 80, 255, 0.75);
 }
 
-/* responsive */
-
 @media (max-width: 480px) {
     .artist-auth-card {
         padding: 24px 18px 22px;
         border-radius: 20px;
     }
 }
-/*search bar*/
+/* === SEARCH BAR === */
 
-.nav-search-icon:hover {
-    background: rgba(255,255,255,0.06);
-    color: #ffffff;
-}
-
-.nav-search-icon:active {
-    transform: scale(0.92);
-}
-/* container da lupa + barra */
 .nav-search-wrapper {
     position: relative;
     display: flex;
     align-items: center;
 }
 
-/* botão da lupa (modo default) */
 .nav-search-icon {
     display: inline-flex;
     align-items: center;
@@ -1574,7 +1548,10 @@ body {
     color: #fff;
 }
 
-/* formulário de pesquisa inicialmente escondido */
+.nav-search-icon:active {
+    transform: scale(0.92);
+}
+
 .nav-search-form {
     display: none;
     align-items: center;
@@ -1582,7 +1559,6 @@ body {
     margin-left: 8px;
 }
 
-/* input que aparece */
 .nav-search-input {
     width: 160px;
     padding: 6px 12px;
@@ -1596,11 +1572,10 @@ body {
 }
 
 .nav-search-input:focus {
-    width: 240px; /* expande ao focar */
+    width: 240px;
     border-color: rgba(255,165,51,0.7);
 }
 
-/* botão X */
 .nav-search-close {
     border: none;
     background: transparent;
@@ -1613,7 +1588,7 @@ body {
 .nav-search-close:hover {
     color: #fff;
 }
-/* ================== PESQUISA PHONYX ================== */
+/* === SEARCH PAGE === */
 
 .search-page {
     max-width: 1200px;
@@ -1673,7 +1648,7 @@ body {
     color: #000;
 }
 
-/* GRID PRINCIPAL (TOP RESULT + SONGS) */
+/* MAIN GRID (TOP RESULT + SONGS) */
 
 .search-main-grid {
     display: grid;
@@ -1825,7 +1800,8 @@ body {
         grid-template-columns: 1fr;
     }
 }
-/*search back botton*/
+/* === SEARCH BACK BUTTON === */
+
 .back-home-wrapper {
     margin-bottom: 20px;
 }
@@ -1846,7 +1822,7 @@ body {
 .back-home-btn:hover {
     background: rgba(255,255,255,0.12);
 }
-/* === TRACKS PAGE (por géneros) === */
+/* === TRACKS PAGE === */
 
 .tracks-page {
     max-width: 1200px;
@@ -1946,6 +1922,9 @@ body {
 }
 
 .track-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     font-size: 12px;
     color: #bbbbbb;
 }
@@ -1965,13 +1944,6 @@ body {
     .tracks-page {
         padding: 0 16px;
     }
-}
-.track-meta {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 12px;
-    color: #bbbbbb;
 }
 
 .track-play-btn {
@@ -1998,7 +1970,6 @@ body {
     color: #777;
 }
 
-/* player no fundo da página de tracks */
 .tracks-player-shell {
     margin-top: 28px;
     padding: 14px 16px;
@@ -2045,74 +2016,9 @@ body {
 .player-like-btn.is-liked {
     color: #ff7eb3;
 }
-/* ==== NAVBAR RESTYLING ==== */
 
-.phonyx-navbar {
-    width: 100%;
-    padding: 14px 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 80px;
-    background: #111;
-    position: sticky;
-    top: 0;
-    z-index: 999;
-}
+/* === USER PILL === */
 
-.nav-left { flex: 1; display: flex; justify-content: flex-start; }
-
-.nav-right {
-    flex: 1;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    gap: 16px;
-}
-
-/* LOGO mais pequeno */
-.nav-logo img {
-    height: 36px;
-    width: auto;
-    opacity: 0.95;
-    transition: 0.2s;
-}
-
-.nav-logo:hover img {
-    opacity: 1;
-    transform: scale(1.04);
-}
-
-
-
-
-/* LINKS CENTRO */
-.nav-center {
-    display: flex;
-    gap: 28px;
-    background: rgba(255,255,255,0.04);
-    padding: 8px 26px;
-    border-radius: 999px;
-    border: 1px solid rgba(255,255,255,0.08);
-    backdrop-filter: blur(6px);
-}
-
-.nav-link {
-    color: rgba(255,255,255,0.55);
-    text-decoration: none;
-    font-size: 15px;
-    padding: 6px 10px;
-    border-radius: 999px;
-    transition: 0.2s;
-}
-
-.nav-link:hover,
-.nav-link.active {
-    color: #fff;
-    background: rgba(255,255,255,0.12);
-}
-
-/* USER PILL */
 .user-pill {
     position: relative;
 }
@@ -2173,13 +2079,12 @@ body {
     color: #ff6b6b;
 }
 
-/* Divider */
 .user-dropdown-divider {
     height: 1px;
     background: rgba(255,255,255,0.1);
     margin: 4px 0;
 }
-/* ===== Página da faixa (track-page) ===== */
+/* === TRACK PAGE === */
 
 .track-page {
     max-width: 1100px;
@@ -2363,7 +2268,7 @@ body {
         grid-template-columns: 1fr;
     }
 }
-/* ===== Página pública do artista ===== */
+/* === ARTIST PAGE === */
 
 .artist-page {
     max-width: 1100px;
@@ -2620,11 +2525,41 @@ body {
     }
 }
 
-.profile-avatar img{
+.profile-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
     border-radius: 999px;
-    display:block;
-  }
-  
+    display: block;
+}
+
+/* === SEARCH ITEMS === */
+
+.search-thumb {
+    width: 52px;
+    height: 52px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.06);
+    margin-right: 14px;
+}
+
+.search-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.search-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.search-item-main {
+    flex: 1;
+}
+
