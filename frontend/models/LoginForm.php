@@ -8,7 +8,7 @@ use common\models\User;
 
 class LoginForm extends Model
 {
-    public $login;      // username OU email
+    public $login;      
     public $password;
     public $rememberMe = true;
 
@@ -55,16 +55,7 @@ class LoginForm extends Model
     {
         if ($this->_user === false) {
             $value = trim((string)$this->login);
-
-            // tenta por username primeiro
-            $user = User::findByUsername($value);
-
-            // se não existir, tenta por email
-            if (!$user && filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                $user = User::find()->where(['email' => $value])->one();
-            }
-
-            $this->_user = $user;
+            $this->_user = User::findByUsernameOrEmail($value);
         }
 
         return $this->_user;

@@ -10,6 +10,13 @@ use yii\web\UploadedFile;
 class User extends \yii\db\ActiveRecord implements IdentityInterface
 {
     // -----------------------
+    // Status
+    // -----------------------
+
+    const STATUS_INACTIVE = 0;
+    const STATUS_ACTIVE = 10;
+
+    // -----------------------
     // Roles
     // -----------------------
 
@@ -64,7 +71,7 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
                 'targetClass' => Asset::class,
                 'targetAttribute' => ['profile_asset_id' => 'id'],
             ],
-                // Profile image upload (optional)
+            // Profile image upload (optional)
             [
                 ['profileFile'],
                 'file',
@@ -96,6 +103,7 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
             'access_token' => $token,
             'deleted_at' => null,
         ]);
+        
     }
 
     public function getId()
@@ -160,6 +168,62 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     public function generateAccessToken()
     {
         $this->access_token = Yii::$app->security->generateRandomString(40);
+    }
+
+    // -----------------------
+    // Password reset helpers
+    // -----------------------
+
+    /**
+     * Generates new password reset token
+     */
+    public function generatePasswordResetToken()
+    {
+        $this->password_reset_token = Yii::$app->security->generateRandomString() . '_' . time();
+    }
+
+    /**
+     * Removes password reset token
+     */
+    public function removePasswordResetToken()
+    {
+        $this->password_reset_token = null;
+    }
+
+    /**
+     * Finds user by password reset token
+     *
+     * @param string $token password reset token
+     * @return static|null
+     */
+    public static function findByPasswordResetToken($token)
+    {
+        if (!static::isPasswordResetTokenValid($token)) {
+            return null;
+        }
+
+        return static::findOne([
+            'password_reset_token' => $token,
+            'status' => self::STATUS_ACTIVE,
+            'deleted_at' => null,
+        ]);
+    }
+
+    /**
+     * Finds out if password reset token is valid
+     *
+     * @param string|null $token password reset token
+     * @return bool
+     */
+    public static function isPasswordResetTokenValid($token)
+    {
+        if (empty($token)) {
+            return false;
+        }
+
+        $timestamp = (int) substr($token, strrpos($token, '_') + 1);
+        $expire = Yii::$app->params['user.passwordResetTokenExpire'] ?? 3600;
+        return $timestamp + $expire >= time();
     }
 
     // -----------------------
@@ -276,4 +340,6 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     {
         return self::optsRole()[$this->role] ?? null;
     }
+    
+
 }
