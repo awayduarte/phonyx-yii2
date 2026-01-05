@@ -2,11 +2,14 @@
 
 namespace backend\controllers;
 
+use Yii;
 use common\models\Track;
+use common\models\Asset;
 use backend\models\TrackSearch;
 use yii\web\Controller;
 use yii\web\NotFoundHttpException;
 use yii\filters\VerbFilter;
+use yii\web\UploadedFile;
 
 /**
  * TrackController implements the CRUD actions for Track model.
@@ -14,7 +17,7 @@ use yii\filters\VerbFilter;
 class TrackController extends Controller
 {
     /**
-     * @inheritDoc
+     * {@inheritdoc}
      */
     public function behaviors()
     {
@@ -22,7 +25,7 @@ class TrackController extends Controller
             parent::behaviors(),
             [
                 'verbs' => [
-                    'class' => VerbFilter::className(),
+                    'class' => VerbFilter::class,
                     'actions' => [
                         'delete' => ['POST'],
                     ],
@@ -49,9 +52,10 @@ class TrackController extends Controller
 
     /**
      * Displays a single Track model.
+     *
      * @param int $id
      * @return string
-     * @throws NotFoundHttpException if the model cannot be found
+     * @throws NotFoundHttpException
      */
     public function actionView($id)
     {
@@ -62,19 +66,41 @@ class TrackController extends Controller
 
     /**
      * Creates a new Track model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
+     *
      * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
         $model = new Track();
 
-        if ($this->request->isPost) {
-            if ($model->load($this->request->post()) && $model->save()) {
+        if ($model->load(Yii::$app->request->post())) {
+
+            // get uploaded audio file
+            $model->audioFile = UploadedFile::getInstance($model, 'audioFile');
+
+            if (!$model->audioFile) {
+                $model->addError('audioFile', 'Audio file is required.');
+                return $this->render('create', ['model' => $model]);
+            }
+
+            // create asset
+            $asset = new Asset();
+            $asset->file = $model->audioFile;
+
+            if (!$asset->save()) {
+                $model->addError('audioFile', 'Failed to upload audio.');
+                return $this->render('create', ['model' => $model]);
+            }
+
+            // link asset to track
+            $model->audio_asset_id = $asset->id;
+
+            // TODO: calculate duration from audio file
+            // $model->duration = ...
+
+            if ($model->save(false)) {
                 return $this->redirect(['view', 'id' => $model->id]);
             }
-        } else {
-            $model->loadDefaultValues();
         }
 
         return $this->render('create', [
@@ -84,16 +110,16 @@ class TrackController extends Controller
 
     /**
      * Updates an existing Track model.
-     * If update is successful, the browser will be redirected to the 'view' page.
+     *
      * @param int $id
      * @return string|\yii\web\Response
-     * @throws NotFoundHttpException if the model cannot be found
+     * @throws NotFoundHttpException
      */
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        if ($model->load(Yii::$app->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
@@ -104,28 +130,27 @@ class TrackController extends Controller
 
     /**
      * Deletes an existing Track model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
+     *
      * @param int $id
      * @return \yii\web\Response
-     * @throws NotFoundHttpException if the model cannot be found
+     * @throws NotFoundHttpException
      */
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
-
         return $this->redirect(['index']);
     }
 
     /**
      * Finds the Track model based on its primary key value.
-     * If the model is not found, a 404 HTTP exception will be thrown.
+     *
      * @param int $id
-     * @return Track the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
+     * @return Track
+     * @throws NotFoundHttpException
      */
     protected function findModel($id)
     {
-        if (($model = Track::findOne(['id' => $id])) !== null) {
+        if (($model = Track::findOne($id)) !== null) {
             return $model;
         }
 

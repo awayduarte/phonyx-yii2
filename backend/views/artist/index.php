@@ -29,24 +29,39 @@ $this->params['breadcrumbs'][] = $this->title;
             'id',
 
             [
-                'attribute' => 'user_id',
+                'attribute' => 'user.username',
                 'label' => 'User',
-                'value' => fn($model) => $model->user->username ?? '(deleted user)',
+                'value' => fn(Artist $model) =>
+                $model->user->username ?? '(deleted user)',
             ],
-
             'stage_name',
 
             [
-                'attribute' => 'bio',
-                'format' => 'ntext',
-                'contentOptions' => ['style' => 'max-width:300px; white-space:normal;'],
+                'label' => 'Music',
+                'format' => 'raw',
+                'value' => fn(Artist $model) =>
+                Html::a(
+                    'Tracks',
+                    ['/track/index', 'TrackSearch[artist_id]' => $model->id],
+                    ['class' => 'btn btn-sm btn-outline-primary']
+                ),
+            ],
+
+            [
+                'label' => 'Albums',
+                'format' => 'raw',
+                'value' => fn(Artist $model) =>
+                Html::a(
+                    'Albums',
+                    ['/album/index', 'AlbumSearch[artist_id]' => $model->id],
+                    ['class' => 'btn btn-sm btn-outline-primary']
+                ),
             ],
 
             [
                 'class' => ActionColumn::class,
-                'urlCreator' => function ($action, Artist $model) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                },
+                'urlCreator' => fn($action, Artist $model) =>
+                Url::toRoute([$action, 'id' => $model->id]),
             ],
         ],
     ]); ?>

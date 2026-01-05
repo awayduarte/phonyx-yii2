@@ -6,11 +6,11 @@ use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use common\models\User;
 
-/**
- * UserSearch represents the model behind the search form of `common\models\User`.
- */
 class UserSearch extends User
 {
+    // control deleted vs active
+    public bool $onlyDeleted = false;
+
     /**
      * {@inheritdoc}
      */
@@ -27,43 +27,48 @@ class UserSearch extends User
      */
     public function scenarios()
     {
-        // bypass scenarios() implementation in the parent class
         return Model::scenarios();
     }
 
     /**
-     * Creates data provider instance with search query applied
-     *
-     * @param array $params
-     * @return ActiveDataProvider
+     * search logic
      */
     public function search($params)
     {
-        // base query: only non-deleted users
-        $query = User::find()
-            ->where(['deleted_at' => null]);
+        // base query
+        $query = User::find();
+
+        // deleted / non-deleted separation
+        if ($this->onlyDeleted) {
+            $query->andWhere(['not', ['deleted_at' => null]]);
+        } else {
+            $query->andWhere(['deleted_at' => null]);
+        }
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'pagination' => [
                 'pageSize' => 10,
             ],
+            'sort' => [
+                'defaultOrder' => ['id' => SORT_DESC],
+            ],
         ]);
 
-        // load search params
+        // load filters
         $this->load($params);
 
         if (!$this->validate()) {
             return $dataProvider;
         }
 
-        // exact match filters
+        // exact filters
         $query->andFilterWhere([
             'id' => $this->id,
             'status' => $this->status,
         ]);
 
-        // partial match filters
+        // partial filters
         $query->andFilterWhere(['like', 'username', $this->username])
             ->andFilterWhere(['like', 'email', $this->email])
             ->andFilterWhere(['like', 'role', $this->role]);

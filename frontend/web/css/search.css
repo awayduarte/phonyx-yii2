@@ -1,0 +1,45 @@
+/* === SEARCH PAGE === */
+
+.search-page {
+    max-width: 1200px;
+    margin: 40px auto 80px;
+    padding: 0 24px;
+    color: #fff;
+  }
+  
+  .search-header {
+    margin-bottom: 24px;
+  }
+  
+  .search-title {
+    font-size: 22px;
+    margin-bottom: 10px;
+  }
+  
+  .search-input {
+    width: 100%;
+    padding: 10px 14px;
+    border-radius: 999px;
+    border: none;
+    background: #181818;
+    color: #fff;
+  }
+  
+  .search-tabs {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  
+  .search-tab {
+    border-radius: 999px;
+    padding: 6px 14px;
+    background: #222;
+    color: #ccc;
+  }
+  
+  .search-tab.active {
+    background: #fff;
+    color: #000;
+  }
+  

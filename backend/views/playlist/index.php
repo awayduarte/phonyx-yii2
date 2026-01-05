@@ -27,32 +27,42 @@ $this->params['breadcrumbs'][] = $this->title;
             ['class' => 'yii\grid\SerialColumn'],
 
             'id',
-            'user_id',
+
+            [
+                'attribute' => 'user_id',
+                'label' => 'User',
+                'value' => fn($model) => $model->user->username ?? '(deleted)',
+            ],
+
             'title',
-            'description:ntext',
+
+            [
+                'attribute' => 'description',
+                'format' => 'ntext',
+                'enableSorting' => false,
+            ],
+
             'cover_asset_id',
 
             [
                 'class' => ActionColumn::class,
                 'template' => '{view} {tracks} {update} {delete}',
                 'buttons' => [
-                    'tracks' => function ($url, Playlist $model) {
-                        return Html::a(
-                            '<i class="fas fa-music"></i>',
-                            ['playlist/tracks', 'id' => $model->id],
-                            [
-                                'title' => 'View tracks',
-                                'class' => 'text-info',
-                                'data-pjax' => '0',
-                            ]
-                        );
-                    },
+                    'tracks' => fn($url, Playlist $model) =>
+                    Html::a(
+                        '<i class="fas fa-music"></i>',
+                        ['playlist/tracks', 'id' => $model->id],
+                        [
+                            'title' => 'View tracks',
+                            'class' => 'text-primary',
+                            'data-pjax' => '0',
+                        ]
+                    ),
                 ],
-                'urlCreator' => function ($action, Playlist $model) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                },
+
             ],
         ],
     ]); ?>
+
 
 </div>

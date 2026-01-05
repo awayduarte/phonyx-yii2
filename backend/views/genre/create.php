@@ -11,7 +11,6 @@ $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="genre-create">
 
-
     <?= $this->render('_form', [
         'model' => $model,
     ]) ?>

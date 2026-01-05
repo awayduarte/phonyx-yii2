@@ -13,6 +13,7 @@ use yii\grid\GridView;
 $this->title = 'Genres';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+
 <div class="genre-index">
 
     <p>
@@ -21,22 +22,19 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
+        'filterModel'  => $searchModel,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
 
             'id',
             'name',
-            'created_at',
-            'updated_at',
+
             [
                 'class' => ActionColumn::class,
-                'urlCreator' => function ($action, Genre $model, $key, $index, $column) {
-                    return Url::toRoute([$action, 'id' => $model->id]);
-                 }
+                'urlCreator' => fn($action, Genre $model) =>
+                Url::toRoute([$action, 'id' => $model->id]),
             ],
         ],
     ]); ?>
-
 
 </div>

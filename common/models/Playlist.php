@@ -59,9 +59,32 @@ class Playlist extends \yii\db\ActiveRecord
             ->viaTable('playlist_track', ['playlist_id' => 'id']);
     }
 
-    // playlist -> owner user
+    // playlist
     public function getUser()
     {
         return $this->hasOne(User::class, ['id' => 'user_id']);
     }
+    
+    public function getLikedByUsers()
+    {
+        return $this->hasMany(\common\models\User::class, ['id' => 'user_id'])
+            ->viaTable('{{%playlist_like}}', ['playlist_id' => 'id']);
+    }
+
+   
+    public function getLikes()
+    {
+        return $this->hasMany(\yii\db\ActiveRecord::class, ['playlist_id' => 'id'])
+            ->from('{{%playlist_like}}');
+    }
+
+    // Helper
+    public function isLikedBy(int $userId): bool
+    {
+        return (new \yii\db\Query())
+            ->from('{{%playlist_like}}')
+            ->where(['playlist_id' => (int) $this->id, 'user_id' => (int) $userId])
+            ->exists();
+    }
+
 }

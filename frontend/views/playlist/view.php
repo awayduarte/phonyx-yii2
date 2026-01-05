@@ -16,17 +16,48 @@ $addUrl    = Url::to(['playlist/add-track']);
 $removeUrl = Url::to(['playlist/remove-track']);
 $searchUrl = Url::to(['track/search'], true);
 
-/* capa da playlist */
-$coverUrl = null;
+/* ===================== PLAYLIST COVER ===================== */
+$coverPath = null;
 if (!empty($playlist->cover_asset_id)) {
   $coverAsset = \common\models\Asset::findOne((int)$playlist->cover_asset_id);
-  if ($coverAsset) $coverUrl = $coverAsset->path;
+  if ($coverAsset) $coverPath = (string)$coverAsset->path;
 }
 
-/* cache-bust BOM (não depende só do id) */
+$coverSrc = null;
+if (!empty($coverPath)) {
+  if (preg_match('~^https?://~i', $coverPath)) {
+    $coverSrc = $coverPath;
+  } else {
+    $p = $coverPath;
+    if ($p !== '' && $p[0] !== '/') $p = '/' . $p;
+    $coverSrc = Url::to('@web' . $p, true);
+  }
+}
+
 $coverBust = '?v=' . time();
 
-/* queue para o player */
+/* ===================== PLAYLIST LIKE ===================== */
+$likeUrl   = Url::to(['playlist/like', 'id' => $playlist->id]);
+$unlikeUrl = Url::to(['playlist/unlike', 'id' => $playlist->id]);
+$loginUrl  = Url::to(['site/login'], true);
+
+$isLiked = false;
+$likeCount = (int)(new \yii\db\Query())
+  ->from('{{%playlist_like}}')
+  ->where(['playlist_id' => (int)$playlist->id])
+  ->count();
+
+if (!Yii::$app->user->isGuest) {
+  $isLiked = (new \yii\db\Query())
+    ->from('{{%playlist_like}}')
+    ->where([
+      'playlist_id' => (int)$playlist->id,
+      'user_id' => (int)Yii::$app->user->id,
+    ])
+    ->exists();
+}
+
+/* ===================== QUEUE (player) ===================== */
 $queue = [];
 foreach ($tracks as $t) {
   $audioPath = $t->audioAsset->path ?? null;
@@ -36,14 +67,23 @@ foreach ($tracks as $t) {
   if (isset($t->artist)) {
     $artistName = $t->artist->stage_name ?? ($t->artist->name ?? '');
   }
-  $audioUrl = Url::to('@web' . $audioPath, true);
 
-  if ($coverPath) {
-    $coverUrlTrack = Url::to('@web' . $coverPath, true);
-  } else {
-    $coverUrlTrack = Url::to('@web/img/default-cover.png', true);
+  // NOTE: some projects don't have track cover relation; keep safe
+  $trackCoverPath = null;
+  if (isset($t->coverAsset) && $t->coverAsset) {
+    $trackCoverPath = $t->coverAsset->path ?? null;
   }
-  
+
+  $ap = (string)$audioPath;
+  if ($ap !== '' && $ap[0] !== '/') $ap = '/' . $ap;
+  $audioUrl = Url::to('@web' . $ap, true);
+
+  $coverUrlTrack = Url::to('@web/img/default-cover.png', true);
+  if (!empty($trackCoverPath)) {
+    $cp = (string)$trackCoverPath;
+    if ($cp !== '' && $cp[0] !== '/') $cp = '/' . $cp;
+    $coverUrlTrack = Url::to('@web' . $cp, true);
+  }
 
   $queue[] = [
     'id'     => (int)$t->id,
@@ -55,6 +95,7 @@ foreach ($tracks as $t) {
 }
 
 $hasQueue = !empty($queue);
+$defaultCoverSearch = Url::to('@web/img/default-cover.png', true);
 ?>
 
 <div class="playlist-page">
@@ -63,8 +104,8 @@ $hasQueue = !empty($queue);
     <div class="playlist-hero-inner container">
 
       <button class="cover-btn" id="btnCover" type="button" title="Mudar capa">
-        <?php if ($coverUrl): ?>
-          <img src="<?= Html::encode(Url::to($coverUrl, true) . $coverBust) ?>" alt="Capa">
+        <?php if ($coverSrc): ?>
+          <img src="<?= Html::encode($coverSrc . $coverBust) ?>" alt="Capa">
         <?php else: ?>
           <div class="cover-placeholder">♪</div>
         <?php endif; ?>
@@ -86,8 +127,22 @@ $hasQueue = !empty($queue);
         <div class="playlist-hero-cta">
           <button class="btn-play-big" type="button" id="btnPlayPlaylist" <?= $hasQueue ? '' : 'disabled' ?>>▶</button>
           <button class="btn-icon" type="button" id="btnShuffle" <?= $hasQueue ? '' : 'disabled' ?>>🔀</button>
+
+          <!-- Like / Unlike playlist -->
+          <button
+            class="btn-icon btn-like-playlist <?= $isLiked ? 'is-liked' : '' ?>"
+            type="button"
+            id="btnLikePlaylist"
+            data-liked="<?= $isLiked ? '1' : '0' ?>"
+            title="<?= $isLiked ? 'Liked' : 'Like' ?>"
+          >
+            <span class="like-heart"><?= $isLiked ? '♥' : '♡' ?></span>
+            <span class="like-count" id="likeCount"><?= (int)$likeCount ?></span>
+          </button>
+
           <button class="btn-icon" type="button" id="btnAddCurrent" title="Adicionar música a tocar">＋</button>
         </div>
+
       </div>
 
     </div>
@@ -168,20 +223,30 @@ const ADD_URL     = <?= json_encode($addUrl) ?>;
 const REMOVE_URL  = <?= json_encode($removeUrl) ?>;
 const SEARCH_URL  = <?= json_encode($searchUrl) ?>;
 const QUEUE       = <?= json_encode($queue, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?>;
+const DEFAULT_COVER = <?= json_encode($defaultCoverSearch) ?>;
+
+const LIKE_URL   = <?= json_encode($likeUrl) ?>;
+const UNLIKE_URL = <?= json_encode($unlikeUrl) ?>;
+const LOGIN_URL  = <?= json_encode($loginUrl) ?>;
+const IS_GUEST   = <?= Yii::$app->user->isGuest ? 'true' : 'false' ?>;
+
+function getCsrfToken() {
+  return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
 
 function postJson(url, data) {
   return fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'X-CSRF-Token': yii.getCsrfToken(),
+      'X-CSRF-Token': getCsrfToken(),
       'X-Requested-With': 'XMLHttpRequest'
     },
     body: new URLSearchParams(data).toString()
   }).then(async r => {
     const txt = await r.text();
     try { return JSON.parse(txt); }
-    catch(e) { console.log('RAW:', txt); return {success:false}; }
+    catch(e) { console.log('RAW:', txt); return {ok:false, success:false}; }
   });
 }
 
@@ -203,8 +268,8 @@ function shuffleArray(arr){
   return a;
 }
 
-/* ========= INTEGRAÇÃO REAL COM O TEU PLAYER ========= */
-const audioEl = document.getElementById('phonyx-audio'); // existe no player.php
+/* ========= PLAYER INTEGRATION ========= */
+const audioEl = document.getElementById('phonyx-audio');
 let plQueue = QUEUE.slice();
 let plIndex = 0;
 
@@ -229,7 +294,6 @@ function playAt(index, autoplay=true){
   plIndex = Math.max(0, Math.min(index, plQueue.length - 1));
   const t = plQueue[plIndex];
 
-  // ESTE É O TEU PLAYER
   if (typeof window.phonyxSetTrack === 'function') {
     window.phonyxSetTrack({
       src: t.src,
@@ -244,7 +308,6 @@ function playAt(index, autoplay=true){
     return;
   }
 
-  // fallback (se por algum motivo o player não estiver carregado)
   if (audioEl) {
     audioEl.src = t.src;
     audioEl.currentTime = 0;
@@ -254,7 +317,7 @@ function playAt(index, autoplay=true){
 }
 
 function togglePlayPause(){
-  if (!audioEl) return; // sem player no layout
+  if (!audioEl) return;
   if (!audioEl.src && plQueue.length) playAt(0, true);
   else if (audioEl.paused) audioEl.play().catch(()=>{});
   else audioEl.pause();
@@ -268,7 +331,6 @@ function playTrackById(id){
   }
 }
 
-/* liga também aos botões do teu player (prev/next) */
 const btnPrev = document.getElementById('player-prev');
 const btnNext = document.getElementById('player-next');
 
@@ -293,6 +355,37 @@ if (btnShuffle) btnShuffle.addEventListener('click', () => {
   playAt(0, true);
 });
 
+/* LIKE PLAYLIST */
+const btnLikePlaylist = document.getElementById('btnLikePlaylist');
+if (btnLikePlaylist) {
+  btnLikePlaylist.addEventListener('click', async () => {
+    if (IS_GUEST) { window.location.href = LOGIN_URL; return; }
+
+    const liked = btnLikePlaylist.dataset.liked === '1';
+    const url = liked ? UNLIKE_URL : LIKE_URL;
+
+    btnLikePlaylist.disabled = true;
+    try {
+      const res = await postJson(url, {});
+      if (!res || !res.ok) return;
+
+      const newLiked = !!res.liked;
+      btnLikePlaylist.dataset.liked = newLiked ? '1' : '0';
+      btnLikePlaylist.classList.toggle('is-liked', newLiked);
+
+      const heart = btnLikePlaylist.querySelector('.like-heart');
+      const count = document.getElementById('likeCount');
+      if (heart) heart.textContent = newLiked ? '♥' : '♡';
+      if (count && typeof res.count !== 'undefined') count.textContent = String(res.count);
+
+    } catch (e) {
+      console.log(e);
+    } finally {
+      btnLikePlaylist.disabled = false;
+    }
+  });
+}
+
 /* ADD CURRENT */
 const btnAddCurrent = document.getElementById('btnAddCurrent');
 if (btnAddCurrent) btnAddCurrent.addEventListener('click', async () => {
@@ -302,17 +395,17 @@ if (btnAddCurrent) btnAddCurrent.addEventListener('click', async () => {
   if (res.success) location.reload();
 });
 
-/* CAPA */
-document.getElementById('btnCover').addEventListener('click', () => {
-  document.getElementById('coverInput').click();
+/* COVER UPLOAD */
+document.getElementById('btnCover')?.addEventListener('click', () => {
+  document.getElementById('coverInput')?.click();
 });
-document.getElementById('coverInput').addEventListener('change', () => {
+document.getElementById('coverInput')?.addEventListener('change', () => {
   if (document.getElementById('coverInput').files.length) {
     document.getElementById('coverForm').submit();
   }
 });
 
-/* REMOVE */
+/* REMOVE TRACK */
 document.querySelectorAll('.btnRemove').forEach(btn => {
   btn.addEventListener('click', async () => {
     const trackId = btn.dataset.trackId;
@@ -343,7 +436,7 @@ function renderResults(items) {
 
   resultsBox.innerHTML = items.map(it => `
     <div class="plr-row">
-      <img class="plr-cover" src="${escapeHtml(it.cover || '/img/default-cover.png')}" alt="">
+      <img class="plr-cover" src="${escapeHtml(it.cover || DEFAULT_COVER)}" alt="">
       <div class="plr-meta">
         <div class="plr-title">${escapeHtml(it.title)}</div>
         <div class="plr-sub">${escapeHtml(it.artist || it.subtitle || '')}</div>
@@ -371,20 +464,20 @@ async function doSearch(q) {
   renderResults(items);
 }
 
-queryInput.addEventListener('input', () => {
+queryInput?.addEventListener('input', () => {
   const q = queryInput.value.trim();
   clearTimeout(searchTimer);
   if (q.length < 2) { resultsBox.innerHTML = ''; return; }
   searchTimer = setTimeout(() => doSearch(q), 220);
 });
 
-btnClear.addEventListener('click', () => {
+btnClear?.addEventListener('click', () => {
   queryInput.value = '';
   resultsBox.innerHTML = '';
   queryInput.focus();
 });
 
-btnClose.addEventListener('click', () => {
+btnClose?.addEventListener('click', () => {
   findBox.remove();
 });
 </script>

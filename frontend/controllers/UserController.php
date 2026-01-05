@@ -34,17 +34,20 @@ class UserController extends Controller
      * Logged-in user profile page
      */
     public function actionProfile()
-    {
-        $user = Yii::$app->user->identity;
+{
+    $this->layout = 'main'; 
 
-        if (!$user) {
-            return $this->redirect(['site/login']);
-        }
+    $user = Yii::$app->user->identity;
+    if (!$user) return $this->redirect(['site/login']);
 
-        return $this->render('profile', [
-            'user' => $user,
-        ]);
-    }
+
+    $this->view->params['bodyClass'] = 'page-profile';
+
+    return $this->render('profile', [
+        'user' => $user,
+    ]);
+}
+
 
     public function actionAccount()
     {

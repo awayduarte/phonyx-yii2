@@ -2,73 +2,71 @@
 
 namespace backend\models;
 
-use yii\base\Model;
 use yii\data\ActiveDataProvider;
+use yii\db\Expression;
 use common\models\Asset;
 
-/**
- * AssetSearch represents the model behind the search form of `common\models\Asset`.
- */
 class AssetSearch extends Asset
 {
-    /**
-     * {@inheritdoc}
-     */
+    public $used_count;
+
     public function rules()
     {
         return [
-            [['id'], 'integer'],
-            [['path', 'type', 'created_at', 'updated_at'], 'safe'],
+            [['id', 'used_count'], 'integer'],
+            [['path', 'type'], 'safe'],
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function scenarios()
     {
-        // bypass scenarios() implementation in the parent class
-        return Model::scenarios();
+        return parent::scenarios();
     }
 
-    /**
-     * Creates data provider instance with search query applied
-     *
-     * @param array $params
-     * @param string|null $formName Form name to be used into `->load()` method.
-     *
-     * @return ActiveDataProvider
-     */
-    public function search($params, $formName = null)
+    public function search($params)
     {
-        $query = Asset::find();
-
-        // add conditions that should always apply here
+        $query = Asset::find()
+            ->select([
+                'asset.*',
+                new Expression('
+                    (
+                        (SELECT COUNT(*) FROM user WHERE profile_asset_id = asset.id) +
+                        (SELECT COUNT(*) FROM artist WHERE avatar_asset_id = asset.id) +
+                        (SELECT COUNT(*) FROM album WHERE cover_asset_id = asset.id) +
+                        (SELECT COUNT(*) FROM playlist WHERE cover_asset_id = asset.id) +
+                        (SELECT COUNT(*) FROM track WHERE audio_asset_id = asset.id)
+                    ) AS used_count
+                ')
+            ]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'pagination' => [
                 'pageSize' => 10,
             ],
+            'sort' => [
+                'defaultOrder' => ['id' => SORT_DESC],
+                'attributes' => [
+                    'id',
+                    'type',
+                    'path',
+                    'used_count' => [
+                        'asc' => ['used_count' => SORT_ASC],
+                        'desc' => ['used_count' => SORT_DESC],
+                    ],
+                ],
+            ],
         ]);
 
-        $this->load($params, $formName);
+        $this->load($params);
 
         if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
-            // $query->where('0=1');
             return $dataProvider;
         }
 
-        // grid filtering conditions
-        $query->andFilterWhere([
-            'id' => $this->id,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-        ]);
-
-        $query->andFilterWhere(['like', 'path', $this->path])
-            ->andFilterWhere(['like', 'type', $this->type]);
+        $query->andFilterWhere(['asset.id' => $this->id])
+            ->andFilterWhere(['asset.type' => $this->type])
+            ->andFilterWhere(['like', 'asset.path', $this->path]);
 
         return $dataProvider;
     }

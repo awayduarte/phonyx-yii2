@@ -74,85 +74,138 @@ class SiteController extends Controller
         return $this->render('index');
     }
 
-    /**
-     * 🔍 SEARCH PAGE
-     * URL: /site/search?q=...
+    /*
+     🔍 SEARCH PAGE
      */
-    public function actionSearch($q = null, $type = 'all')
-    {
-        $q = trim((string) $q);
-        $type = $type ?: 'all';
+    public function actionSearch(string $q = '', string $type = 'all')
+{
+    $q = trim(Yii::$app->request->get('q', $q));
+    $type = Yii::$app->request->get('type', $type) ?: 'all';
 
-        // Empty results structure
-        $results = [
-            'tracks'    => [],
-            'artists'   => [],
-            'albums'    => [],
-            'playlists' => [],
-            'profiles'  => [],
-        ];
+    $valid = ['all','playlists','songs','artists','profiles','albums'];
+    if (!in_array($type, $valid, true)) $type = 'all';
 
-        // If query is empty, just show the page
-        if ($q === '') {
-            return $this->render('search', [
-                'q' => $q,
-                'type' => $type,
-                'results' => $results,
-            ]);
-        }
+    $results = [
+        'tracks' => [],
+        'playlists' => [],
+        'artists' => [],
+        'profiles' => [],
+        'albums' => [],
+    ];
 
-        // 🎵 Tracks
-        if ($type === 'all' || $type === 'songs') {
-            $results['tracks'] = Track::find()
-                ->joinWith(['artist', 'audioAsset'])
-                ->andFilterWhere(['like', 'track.title', $q])
-                ->orderBy(['track.created_at' => SORT_DESC])
-                ->limit(20)
-                ->all();
-        }
-
-        // 🎤 Artists
-        if ($type === 'all' || $type === 'artists') {
-            $results['artists'] = Artist::find()
-                ->andFilterWhere(['like', 'stage_name', $q])
-                ->orderBy(['stage_name' => SORT_ASC])
-                ->limit(20)
-                ->all();
-        }
-
-        // 💿 Albums
-        if ($type === 'all' || $type === 'albums') {
-            $results['albums'] = Album::find()
-                ->andFilterWhere(['like', 'title', $q])
-                ->orderBy(['created_at' => SORT_DESC])
-                ->limit(20)
-                ->all();
-        }
-
-        // 📂 Playlists
-        if ($type === 'all' || $type === 'playlists') {
-            $results['playlists'] = Playlist::find()
-                ->andFilterWhere(['like', 'title', $q])
-                ->orderBy(['created_at' => SORT_DESC])
-                ->limit(20)
-                ->all();
-        }
-
-        // 👤 Profiles (users)
-        if ($type === 'all' || $type === 'profiles') {
-            $results['profiles'] = User::find()
-                ->andFilterWhere(['like', 'username', $q])
-                ->orderBy(['username' => SORT_ASC])
-                ->limit(20)
-                ->all();
-        }
-
+    if ($q === '') {
         return $this->render('search', [
             'q' => $q,
             'type' => $type,
             'results' => $results,
         ]);
     }
+
+    // ARTISTS
+    $artists = \common\models\Artist::find()
+        ->where(['like', 'stage_name', $q])
+        ->orWhere(['like', 'bio', $q])
+        ->with(['user.profileAsset'])
+        ->limit(20)
+        ->all();
+
+    $artistIds = \yii\helpers\ArrayHelper::getColumn($artists, 'id');
+
+    // TRACKS
+    $trackTable  = \common\models\Track::tableName();
+    $trackSchema = \common\models\Track::getTableSchema();
+    $hasFeat     = $trackSchema && isset($trackSchema->columns['feat']);
+    $hasArtistId = $trackSchema && isset($trackSchema->columns['artist_id']);
+
+    $tracksQuery = \common\models\Track::find()
+        ->with([
+            'audioAsset',
+            'album.coverAsset',
+            'artist.user.profileAsset',
+        ])
+        ->limit(50);
+
+    $tracksQuery->where(['like', $trackTable . '.title', $q]);
+
+    if ($hasFeat) {
+        $tracksQuery->orWhere(['like', $trackTable . '.feat', $q]);
+    }
+
+    if ($hasArtistId && !empty($artistIds)) {
+        $tracksQuery->orWhere([$trackTable . '.artist_id' => $artistIds]);
+    } else {
+        try {
+            $tracksQuery->joinWith(['artist a'], false);
+            $tracksQuery->orWhere(['like', 'a.stage_name', $q]);
+        } catch (\Throwable $e) {}
+    }
+
+    $tracks = $tracksQuery->all();
+
+    // ALBUMS
+    $albums = \common\models\Album::find()
+        ->andWhere(['like', 'title', $q])
+        ->with(['coverAsset', 'artist'])
+        ->limit(20)
+        ->all();
+
+    // PLAYLISTS (sem owner)
+    $playlists = \common\models\Playlist::find()
+        ->andWhere(['like', 'title', $q])
+        ->with(['coverAsset'])
+        ->limit(20)
+        ->all();
+
+    // PROFILES (sem display_name se não existir)
+    $userTable  = \common\models\User::tableName();
+    $userSchema = \common\models\User::getTableSchema();
+    $hasDisplayName = $userSchema && isset($userSchema->columns['display_name']);
+
+    $profilesQuery = \common\models\User::find()
+        ->with(['profileAsset'])
+        ->limit(20);
+
+    if ($hasDisplayName) {
+        $profilesQuery->andWhere(['or',
+            ['like', $userTable . '.username', $q],
+            ['like', $userTable . '.display_name', $q],
+            ['like', $userTable . '.email', $q],
+        ]);
+    } else {
+        $profilesQuery->andWhere(['or',
+            ['like', $userTable . '.username', $q],
+            ['like', $userTable . '.email', $q],
+        ]);
+    }
+
+    $profiles = $profilesQuery->all();
+
+    // TAB FILTER
+    if ($type === 'artists') {
+        $results['artists'] = $artists;
+    } elseif ($type === 'songs') {
+        $results['tracks'] = $tracks;
+    } elseif ($type === 'albums') {
+        $results['albums'] = $albums;
+    } elseif ($type === 'playlists') {
+        $results['playlists'] = $playlists;
+    } elseif ($type === 'profiles') {
+        $results['profiles'] = $profiles;
+    } else {
+        $results['artists'] = $artists;
+        $results['tracks'] = $tracks;
+        $results['albums'] = $albums;
+        $results['playlists'] = $playlists;
+        $results['profiles'] = $profiles;
+    }
+
+    return $this->render('search', [
+        'q' => $q,
+        'type' => $type,
+        'results' => $results,
+    ]);
+}
+
 
     /**
      * Signup
