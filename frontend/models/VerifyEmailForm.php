@@ -20,11 +20,9 @@ class VerifyEmailForm extends Model
 
 
     /**
-     * Creates a form model with given token.
-     *
      * @param string $token
-     * @param array $config name-value pairs that will be used to initialize the object properties
-     * @throws InvalidArgumentException if token is empty or not valid
+     * @param array $config 
+     * @throws InvalidArgumentException 
      */
     public function __construct($token, array $config = [])
     {
@@ -39,9 +37,7 @@ class VerifyEmailForm extends Model
     }
 
     /**
-     * Verify email
-     *
-     * @return User|null the saved model or null if saving fails
+     * @return User|null 
      */
     public function verifyEmail()
     {

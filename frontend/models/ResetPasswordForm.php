@@ -21,11 +21,10 @@ class ResetPasswordForm extends Model
 
 
     /**
-     * Creates a form model given a token.
-     *
+    
      * @param string $token
-     * @param array $config name-value pairs that will be used to initialize the object properties
-     * @throws InvalidArgumentException if token is empty or not valid
+     * @param array $config 
+     * @throws InvalidArgumentException 
      */
     public function __construct($token, $config = [])
     {
@@ -53,7 +52,7 @@ class ResetPasswordForm extends Model
     /**
      * Resets password.
      *
-     * @return bool if password was reset.
+     * @return bool 
      */
     public function resetPassword()
     {

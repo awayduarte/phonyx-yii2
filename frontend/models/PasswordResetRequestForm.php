@@ -7,7 +7,7 @@ use yii\base\Model;
 use common\models\User;
 
 /**
- * Password reset request form
+ * Password 
  */
 class PasswordResetRequestForm extends Model
 {
@@ -32,13 +32,11 @@ class PasswordResetRequestForm extends Model
     }
 
     /**
-     * Sends an email with a link, for resetting the password.
      *
-     * @return bool whether the email was send
+     * @return bool
      */
     public function sendEmail()
     {
-        /* @var $user User */
         $user = User::findOne([
             'status' => User::STATUS_ACTIVE,
             'email' => $this->email,

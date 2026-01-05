@@ -32,9 +32,7 @@ class ResendVerificationEmailForm extends Model
     }
 
     /**
-     * Sends confirmation email to user
-     *
-     * @return bool whether the email was sent
+     * @return bool 
      */
     public function sendEmail()
     {

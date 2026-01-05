@@ -8,7 +8,6 @@ use common\models\User;
 
 class SignupForm extends Model
 {
-    // form fields
     public $username;
     public $email;
     public $password;
@@ -48,7 +47,6 @@ class SignupForm extends Model
             return null;
         }
 
-        // auto login after signup
         Yii::$app->user->login($user);
 
         return $user;
