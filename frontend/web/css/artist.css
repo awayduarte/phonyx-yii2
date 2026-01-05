@@ -482,7 +482,7 @@
     color: rgba(255, 255, 255, 0.8);
 }
 
-/* Force text color inside album box (safety net) */
+/* Force text color inside album box */
 .album-track-box *,
 .album-track-box label,
 .album-track-box span {
@@ -493,7 +493,7 @@
     color: white;
 }
 
-/* Full list pages (Mostrar tudo) */
+/* Full list pages */
 .sp-grid{
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
