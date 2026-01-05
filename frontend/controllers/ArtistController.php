@@ -173,7 +173,7 @@ class ArtistController extends Controller
 }
 
     /**
-     * Follow an artist (AJAX).
+     * Follow an artist .
      */
     public function actionFollow($id)
     {
@@ -203,7 +203,7 @@ class ArtistController extends Controller
     }
     
     /**
-     * Unfollow an artist (AJAX).
+     * Unfollow.
      */
     public function actionUnfollow($id)
 {

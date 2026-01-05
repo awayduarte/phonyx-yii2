@@ -12,7 +12,7 @@ use common\models\Asset;
 
 class UserController extends Controller
 {
-    public $layout = 'main'; // Make sure we use the same main layout as the rest of the website
+    public $layout = 'main'; 
 
     public function behaviors()
     {
@@ -31,7 +31,7 @@ class UserController extends Controller
     }
 
     /**
-     * Logged-in user profile page
+     * Logged-in user
      */
     public function actionProfile()
 {
@@ -60,30 +60,25 @@ class UserController extends Controller
     }
 
     /**
-     * Edit profile (username, email, and optional profile photo upload)
+     * Edit profile 
      */
     public function actionEditProfile()
     {
         /** @var \common\models\User $user */
         $user = Yii::$app->user->identity;
 
-        // Form model that edits user fields
+       
         $model = new EditProfileForm($user);
 
         if (Yii::$app->request->isPost) {
 
-            // Load posted fields
+            
             if ($model->load(Yii::$app->request->post())) {
-
-                // Attach uploaded file (optional)
+                
                 $model->profileFile = UploadedFile::getInstance($model, 'profileFile');
 
-                // Validate form input (username/email + optional file rules if you have them)
                 if ($model->validate()) {
 
-                    // -----------------------------------------
-                    // Handle profile photo upload (optional)
-                    // -----------------------------------------
                     if ($model->profileFile) {
 
                         $basePath = Yii::getAlias('@frontend/web/uploads/profiles');
@@ -96,17 +91,16 @@ class UserController extends Controller
 
                         if ($model->profileFile->saveAs($fullPath)) {
 
-                            // Save file as an Asset row
                             $asset = new Asset();
                             $asset->path = '/uploads/profiles/' . $filename;
                             $asset->type = 'image';
 
                             if ($asset->save(false)) {
 
-                                // Link uploaded image to user profile
+                                
                                 $user->profile_asset_id = $asset->id;
 
-                                // If user has an artist profile, reuse the same image as artist avatar
+
                                 if ($user->artist) {
                                     $user->artist->avatar_asset_id = $asset->id;
                                     $user->artist->save(false);
@@ -115,13 +109,10 @@ class UserController extends Controller
                         }
                     }
 
-                    // -----------------------------------------
-                    // Update user basic fields
-                    // -----------------------------------------
                     $user->username = $model->username;
                     $user->email = $model->email;
 
-                    // Save user without re-validating (form already validated)
+
                     if ($user->save(false)) {
                         Yii::$app->session->setFlash('success', 'Profile updated successfully.');
                         return $this->refresh();

@@ -103,7 +103,7 @@ class SearchController extends Controller
             ->limit(30)
             ->all();
 
-        // ================= TAB FILTER (performance) =================
+        // ================= TAB FILTER =================
         if ($activeTab !== 'all') {
             if ($activeTab !== 'artists')   $artists = [];
             if ($activeTab !== 'tracks')    $tracks = [];

@@ -149,14 +149,14 @@ class SiteController extends Controller
         ->limit(20)
         ->all();
 
-    // PLAYLISTS (sem owner)
+    // PLAYLISTS 
     $playlists = \common\models\Playlist::find()
         ->andWhere(['like', 'title', $q])
         ->with(['coverAsset'])
         ->limit(20)
         ->all();
 
-    // PROFILES (sem display_name se não existir)
+    // PROFILES 
     $userTable  = \common\models\User::tableName();
     $userSchema = \common\models\User::getTableSchema();
     $hasDisplayName = $userSchema && isset($userSchema->columns['display_name']);

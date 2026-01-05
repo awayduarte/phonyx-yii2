@@ -81,12 +81,12 @@ class AlbumController extends Controller
             $selectedTrackIds = Yii::$app->request->post('trackIds', []);
             $selectedTrackIds = array_values(array_filter(array_map('intval', (array)$selectedTrackIds)));
     
-            // upload opcional
+            // upload 
             if (property_exists($model, 'coverFile')) {
                 $model->coverFile = UploadedFile::getInstance($model, 'coverFile');
             }
     
-            // remover capa (checkbox no form: name="removeCover" value="1")
+            // remover capa 
             $removeCover = (int)Yii::$app->request->post('removeCover', 0) === 1;
     
             if ($model->validate()) {
@@ -95,7 +95,7 @@ class AlbumController extends Controller
                     $model->cover_asset_id = null;
                 }
     
-                // Se fez upload de capa, cria um Asset e guarda cover_asset_id
+                
                 if (property_exists($model, 'coverFile') && $model->coverFile) {
                     $baseCoverPath = Yii::getAlias('@frontend/web/uploads/album-covers');
                     if (!is_dir($baseCoverPath)) {
@@ -111,17 +111,16 @@ class AlbumController extends Controller
                         $asset = new Asset();
                         $asset->path = $relativePath;
     
-                        // se tiveres type no Asset
                         if ($asset->hasAttribute('type')) {
                             $asset->type = 'image';
                         }
     
-                        // se tiveres created_by_user_id no Asset
+                        
                         if ($asset->hasAttribute('created_by_user_id')) {
                             $asset->created_by_user_id = (int)Yii::$app->user->id;
                         }
     
-                        // se tiveres timestamps no Asset
+                        
                         if ($asset->hasAttribute('created_at') && empty($asset->created_at)) {
                             $asset->created_at = new Expression('NOW()');
                         }
@@ -137,7 +136,7 @@ class AlbumController extends Controller
     
                 $model->save(false);
     
-                // associar as tracks ao álbum
+                
                 $this->syncAlbumTracks((int)$artist->id, (int)$model->id, $selectedTrackIds);
     
                 Yii::$app->session->setFlash('success', 'Album created successfully.');
@@ -167,7 +166,7 @@ class AlbumController extends Controller
 
     $trackOptions = $this->artistTrackOptions((int)$artist->id);
 
-    // tracks já no álbum
+    
     $selectedTrackIds = Track::find()
         ->select('id')
         ->where([
@@ -178,11 +177,11 @@ class AlbumController extends Controller
 
     if ($model->load(Yii::$app->request->post())) {
 
-        // tracks escolhidas
+       
         $selectedTrackIds = Yii::$app->request->post('trackIds', []);
         $selectedTrackIds = array_values(array_filter(array_map('intval', (array)$selectedTrackIds)));
 
-        // upload opcional
+       
         if (property_exists($model, 'coverFile')) {
             $model->coverFile = UploadedFile::getInstance($model, 'coverFile');
         }
@@ -191,12 +190,11 @@ class AlbumController extends Controller
 
         if ($model->validate()) {
 
-            // remover capa
+            
             if ($removeCover) {
                 $model->cover_asset_id = null;
             }
 
-            // se fez upload de nova capa -> cria asset e atribui cover_asset_id
             if (property_exists($model, 'coverFile') && $model->coverFile) {
 
                 $baseCoverPath = Yii::getAlias('@frontend/web/uploads/album-covers');
@@ -210,7 +208,7 @@ class AlbumController extends Controller
                 if ($model->coverFile->saveAs($coverFullPath)) {
                     $relativePath = 'uploads/album-covers/' . $coverFilename;
 
-                    // Reutiliza asset existente se houver (melhor), senão cria novo
+                    
                     $asset = null;
                     if (!empty($model->cover_asset_id)) {
                         $asset = Asset::findOne((int)$model->cover_asset_id);
@@ -242,7 +240,7 @@ class AlbumController extends Controller
 
             $model->save(false);
 
-            // sync das faixas para o álbum
+            
             $this->syncAlbumTracks((int)$artist->id, (int)$model->id, $selectedTrackIds);
 
             Yii::$app->session->setFlash('success', 'Album updated successfully.');
@@ -288,7 +286,7 @@ class AlbumController extends Controller
         throw new NotFoundHttpException('Album not found.');
     }
 
-    // Buscar faixas do álbum (assumindo track.album_id)
+   
     $tracks = Track::find()
         ->where(['album_id' => (int)$album->id])
         ->orderBy(['created_at' => SORT_ASC])

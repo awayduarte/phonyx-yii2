@@ -21,7 +21,7 @@ class PlaylistController extends Controller
     public function behaviors()
     {
         return [
-            // Logged users only for these actions
+            
             'access' => [
                 'class' => AccessControl::class,
                 'only' => [
@@ -119,7 +119,7 @@ class PlaylistController extends Controller
 
     return $this->render('discover', [
         'myPlaylists' => $myPlaylists,
-        'likedPlaylists' => $likedPlaylists, // ✅ NEW
+        'likedPlaylists' => $likedPlaylists, 
         'suggestedPlaylists' => $suggestedPlaylists,
         'userId' => $userId,
         'coverMap' => $coverMap,
@@ -131,7 +131,7 @@ class PlaylistController extends Controller
     {
         $model = new Playlist();
 
-        // Tracks to show in create form
+        
         $availableTracks = Track::find()
             ->with(['artist'])
             ->orderBy(['id' => SORT_DESC])
@@ -140,7 +140,7 @@ class PlaylistController extends Controller
 
         $uid = (int)Yii::$app->user->id;
 
-        // Try to set owner field based on existing columns
+        
         $schema = Playlist::getTableSchema();
         if ($schema) {
             foreach (['user_id', 'created_by_user_id', 'created_by', 'owner_id'] as $attr) {
@@ -150,7 +150,7 @@ class PlaylistController extends Controller
                 }
             }
 
-            // Default public if column exists
+            
             foreach (['is_public', 'public'] as $attr) {
                 if (isset($schema->columns[$attr]) && $model->hasAttribute($attr) && $model->$attr === null) {
                     $model->$attr = 1;
@@ -219,7 +219,7 @@ class PlaylistController extends Controller
     }
 
     /**
-     * Like/unlike track to "Gostos" playlist (this is track-like, keep it)
+     * Like/unlike 
      */
     public function actionToggleLike()
     {
@@ -232,7 +232,7 @@ class PlaylistController extends Controller
             return ['success' => false, 'message' => 'Faixa inválida.'];
         }
 
-        // Find or create the "Gostos" playlist
+      
         $playlist = Playlist::find()
             ->where(['user_id' => $userId, 'title' => 'Gostos'])
             ->one();
@@ -262,7 +262,7 @@ class PlaylistController extends Controller
         $link->playlist_id = (int)$playlist->id;
         $link->track_id = (int)$trackId;
 
-        // Some schemas store created_at as int, others as datetime
+        
         if ($link->hasAttribute('created_at')) {
             $link->created_at = time();
         }
@@ -275,7 +275,7 @@ class PlaylistController extends Controller
     }
 
     /**
-     * Add track to playlist (AJAX)
+     * Add track to playlist 
      */
     public function actionAddTrack()
     {
@@ -333,7 +333,7 @@ class PlaylistController extends Controller
     }
 
     /**
-     * Remove track from playlist (AJAX)
+     * Remove track from playlist 
      */
     public function actionRemoveTrack()
     {
@@ -355,7 +355,7 @@ class PlaylistController extends Controller
     }
 
     /**
-     * Update playlist cover (POST file)
+     * Update playlist
      */
     public function actionUpdateCover($id)
     {
@@ -409,7 +409,7 @@ class PlaylistController extends Controller
     }
 
     /**
-     * Search tracks for playlist add (AJAX)
+     * Search tracks 
      */
     public function actionSearch($q = '')
     {
@@ -436,7 +436,7 @@ class PlaylistController extends Controller
     }
 
     /**
-     * Return my playlists for dropdown (AJAX)
+     * Return my playlists
      */
     public function actionMyPlaylists()
     {
@@ -462,7 +462,7 @@ class PlaylistController extends Controller
     }
 
     /**
-     * Like a playlist (AJAX)
+     * Like a playlist 
      */
     public function actionLike($id)
     {
@@ -470,13 +470,11 @@ class PlaylistController extends Controller
 
         $playlistId = (int)$id;
         $userId = (int)Yii::$app->user->id;
-
-        // Ensure playlist exists
+      
         if (!Playlist::find()->where(['id' => $playlistId])->exists()) {
             return ['ok' => false, 'message' => 'Playlist not found'];
         }
 
-        // Insert like if not exists
         $exists = (new \yii\db\Query())
             ->from('{{%playlist_like}}')
             ->where(['playlist_id' => $playlistId, 'user_id' => $userId])
@@ -499,7 +497,7 @@ class PlaylistController extends Controller
     }
 
     /**
-     * Unlike a playlist (AJAX)
+     * Unlike a playlist 
      */
     public function actionUnlike($id)
     {

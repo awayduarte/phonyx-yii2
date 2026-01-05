@@ -20,7 +20,7 @@ class ProfileController extends Controller
                 'only' => ['edit'],
                 'rules' => [
                     [
-                        // Only logged users can edit profile
+                        
                         'allow' => true,
                         'roles' => ['@'],
                     ],
@@ -30,7 +30,7 @@ class ProfileController extends Controller
     }
 
     /**
-     * Edit profile (username/email + profile picture).
+     * Edit profile.
      */
     public function actionEdit()
     {
@@ -40,13 +40,13 @@ class ProfileController extends Controller
         if (Yii::$app->request->isPost) {
             $model->load(Yii::$app->request->post());
 
-            // Handle profile image upload (optional)
+            
             $model->profileFile = UploadedFile::getInstance($model, 'profileFile');
 
             if ($model->validate()) {
 
                 if ($model->profileFile) {
-                    // 1) Save file to /frontend/web/uploads/profiles
+                   
                     $basePath = Yii::getAlias('@frontend/web/uploads/profiles');
                     if (!is_dir($basePath)) {
                         mkdir($basePath, 0775, true);
@@ -56,19 +56,19 @@ class ProfileController extends Controller
                     $fullPath = $basePath . DIRECTORY_SEPARATOR . $filename;
 
                     if ($model->profileFile->saveAs($fullPath)) {
-                        // 2) Create asset record
+                        
                         $asset = new Asset();
                         $asset->path = '/uploads/profiles/' . $filename;
                         $asset->type = 'image';
 
                         if ($asset->save(false)) {
-                            // 3) Link asset to user
+                            
                             $model->profile_asset_id = $asset->id;
                         }
                     }
                 }
 
-                // Save user basic fields + profile_asset_id
+            
                 if ($model->save(false)) {
                     Yii::$app->session->setFlash('success', 'Profile updated successfully.');
                     return $this->redirect(['profile/edit']);
