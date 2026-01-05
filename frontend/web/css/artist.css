@@ -395,3 +395,100 @@
     line-height: 1;
   }
   
+
+  /* ================================
+   Album – Track selection
+   ================================ */
+
+.album-track-section {
+    margin-top: 16px;
+}
+
+.album-track-label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.album-track-box {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 14px;
+    padding: 12px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+/* Each track row */
+.album-track-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    user-select: none;
+}
+
+.album-track-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+/* Checkbox */
+.album-track-checkbox {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 auto;
+}
+
+/* Text container */
+.album-track-text {
+    min-width: 0;
+    display: block;
+}
+
+/* Track title */
+.album-track-title {
+    display: block;
+    font-weight: 600;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Small meta text */
+.album-track-meta {
+    display: block;
+    font-size: 12px;
+    opacity: 0.7;
+    color: #ffffff;
+    margin-top: 2px;
+}
+
+/* Counter + actions */
+.album-track-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.album-track-counter {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+/* Force text color inside album box (safety net) */
+.album-track-box *,
+.album-track-box label,
+.album-track-box span {
+    color: #fff;
+}
+
+.artist-album{
+    color: white;
+}
