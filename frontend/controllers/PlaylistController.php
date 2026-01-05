@@ -21,7 +21,8 @@ class PlaylistController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::class,
-                'only' => ['toggle-like', 'create', 'add-track', 'remove-track', 'update-cover'],
+                'only' => ['toggle-like', 'create', 'add-track', 'remove-track', 'update-cover', 'my-playlists'],
+
 
 
                 'rules' => [
@@ -38,6 +39,8 @@ class PlaylistController extends Controller
                     'add-track' => ['post'],
                     'remove-track' => ['post'],
                     'update-cover' => ['post'],
+                    'my-playlists' => ['get'],
+
                 ],
 
             ],
@@ -45,60 +48,52 @@ class PlaylistController extends Controller
     }
 
     public function actionDiscover()
-    {
-        $userId = Yii::$app->user->isGuest ? null : Yii::$app->user->id;
+{
+    $userId = Yii::$app->user->isGuest ? null : Yii::$app->user->id;
 
-        $myPlaylists = [];
-        if ($userId) {
-            $myPlaylists = Playlist::find()
-                ->where(['user_id' => $userId])
-                ->andWhere(['<>', 'title', 'Gostos'])
-                ->orderBy(['updated_at' => SORT_DESC])
-                ->all();
-        }
-
-        $suggestedQuery = Playlist::find()
+    $myPlaylists = [];
+    if ($userId) {
+        $myPlaylists = Playlist::find()
+            ->where(['user_id' => $userId])
             ->andWhere(['<>', 'title', 'Gostos'])
             ->orderBy(['updated_at' => SORT_DESC])
-            ->limit(12);
-
-        if ($userId) {
-            $suggestedQuery->andWhere(['<>', 'user_id', $userId]);
-        }
-
-        $suggestedPlaylists = $suggestedQuery->all();
-
-        return $this->render('discover', [
-            'myPlaylists' => $myPlaylists,
-            'suggestedPlaylists' => $suggestedPlaylists,
-            'userId' => $userId,
-        ]);
-        $coverIds = [];
-
-        foreach ($myPlaylists as $pl) {
-            if ($pl->cover_asset_id)
-                $coverIds[] = $pl->cover_asset_id;
-        }
-        foreach ($suggestedPlaylists as $pl) {
-            if ($pl->cover_asset_id)
-                $coverIds[] = $pl->cover_asset_id;
-        }
-
-        $coverMap = [];
-        if (!empty($coverIds)) {
-            $assets = Asset::find()->where(['id' => array_unique($coverIds)])->all();
-            foreach ($assets as $a) {
-                $coverMap[$a->id] = $a->path;
-            }
-        }
-
-        return $this->render('discover', [
-            'myPlaylists' => $myPlaylists,
-            'suggestedPlaylists' => $suggestedPlaylists,
-            'userId' => $userId,
-            'coverMap' => $coverMap,
-        ]);
+            ->all();
     }
+
+    $suggestedQuery = Playlist::find()
+        ->andWhere(['<>', 'title', 'Gostos'])
+        ->orderBy(['updated_at' => SORT_DESC])
+        ->limit(12);
+
+    if ($userId) {
+        $suggestedQuery->andWhere(['<>', 'user_id', $userId]);
+    }
+
+    $suggestedPlaylists = $suggestedQuery->all();
+
+    $coverIds = [];
+    foreach ($myPlaylists as $pl) {
+        if ($pl->cover_asset_id) $coverIds[] = $pl->cover_asset_id;
+    }
+    foreach ($suggestedPlaylists as $pl) {
+        if ($pl->cover_asset_id) $coverIds[] = $pl->cover_asset_id;
+    }
+
+    $coverMap = [];
+    if (!empty($coverIds)) {
+        $assets = Asset::find()->where(['id' => array_unique($coverIds)])->all();
+        foreach ($assets as $a) {
+            $coverMap[$a->id] = $a->path;
+        }
+    }
+
+    return $this->render('discover', [
+        'myPlaylists' => $myPlaylists,
+        'suggestedPlaylists' => $suggestedPlaylists,
+        'userId' => $userId,
+        'coverMap' => $coverMap,
+    ]);
+}
 
     public function actionCreate()
     {
@@ -334,6 +329,33 @@ class PlaylistController extends Controller
 
         return $out;
     }
+
+    public function actionMyPlaylists()
+{
+    Yii::$app->response->format = Response::FORMAT_JSON;
+
+    if (Yii::$app->user->isGuest) {
+        return ['success' => false, 'playlists' => []];
+    }
+
+    $userId = (int) Yii::$app->user->id;
+
+    $pls = Playlist::find()
+        ->where(['user_id' => $userId])
+        ->andWhere(['<>', 'title', 'Gostos'])
+        ->orderBy(['updated_at' => SORT_DESC])
+        ->all();
+
+    $out = [];
+    foreach ($pls as $p) {
+        $out[] = [
+            'id' => (int) $p->id,
+            'title' => (string) $p->title,
+        ];
+    }
+
+    return ['success' => true, 'playlists' => $out];
+}
 
 
 }

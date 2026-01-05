@@ -22,11 +22,16 @@ class TrackController extends Controller
         return [
             'access' => [
                 'class' => AccessControl::class,
+                'only' => ['create',  'delete'],
                 'rules' => [
                     [
-                        'actions' => ['index', 'view', 'search'],
+                        'actions' => ['index', 'view','update', 'search'],
                         'allow' => true,
                         'roles' => ['?', '@'],
+                        'matchCallback' => function () {
+                        $user = Yii::$app->user->identity;
+                        return $user && $user->artist; // só artistas
+                    },
                     ],
                     [
                         'actions' => ['create'],
