@@ -3,30 +3,33 @@
 /** @var \common\models\Genre[] $genres */
 /** @var array $tracksByGenre */
 
-
 use yii\helpers\Html;
 use yii\helpers\Url;
 
 $this->title = 'Tracks | PHONYX';
+
+$this->registerCssFile(
+    Yii::getAlias('@web/css/tracks.css'),
+    ['depends' => [\frontend\assets\AppAsset::class]]
+);
 ?>
 
 <div class="tracks-page">
 
-    <h1 class="tracks-title">Todas as faixas</h1>
-    <p class="tracks-subtitle">
-        Explora as músicas da PHONYX por género.
-    </p>
+    <!-- Page header -->
+    <header class="tracks-header">
+        <h1 class="tracks-title">Todas as faixas</h1>
+        <p class="tracks-subtitle">Explora as músicas da PHONYX por género.</p>
+    </header>
 
     <?php foreach ($genres as $genre): ?>
+        <?php $tracks = $tracksByGenre[$genre->id] ?? []; ?>
+
         <section class="tracks-genre-block">
-            <header class="tracks-genre-header">
-                <h2 class="tracks-genre-name">
-                    <?= Html::encode($genre->name) ?>
-                </h2>
-            </header>
-
-            <?php $tracks = $tracksByGenre[$genre->id] ?? []; ?>
-
+            <!-- Genre header -->
+            <div class="tracks-genre-header">
+                <h2 class="tracks-genre-name"><?= Html::encode($genre->name) ?></h2>
+            </div>
 
             <?php if (empty($tracks)): ?>
                 <p class="tracks-empty">Nenhuma faixa neste género.</p>
@@ -34,65 +37,65 @@ $this->title = 'Tracks | PHONYX';
                 <div class="tracks-list">
                     <?php foreach ($tracks as $track): ?>
                         <?php
-                        // Audio URL: stored in Asset table and linked by track.audio_asset_id
-                        $audioUrl = null;
-                        if ($track->audioAsset && !empty($track->audioAsset->path)) {
-                            // Asset path is expected to be like: /uploads/tracks/track_xxx.mp3
-                            $audioUrl = Yii::getAlias('@web') . $track->audioAsset->path;
-                        }
+                        // Track URLs
+                        $trackUrl = Url::to(['track/view', 'id' => $track->id]);
 
-                        // Cover URL: track does not have cover_path in your DB schema.
-                        // Use a default cover for now (you can later link a cover asset if you add cover_asset_id).
+                        // Cover (default for now)
                         $coverUrl = Yii::getAlias('@web') . '/img/default-cover.png';
 
-                        // Main artist name (via relation)
-                        $artistName = $track->artist ? ($track->artist->artist_name ?? $track->artist->stage_name ?? 'Unknown artist') : 'Unknown artist';
+                        // Artist name (via relation)
+                        $artistName = $track->artist
+                            ? ($track->artist->artist_name ?? $track->artist->stage_name ?? 'Unknown artist')
+                            : 'Unknown artist';
 
-                        // Link to track view page
-                        $trackUrl = Url::to(['track/view', 'id' => $track->id]);
+                        // Audio URL (via asset relation)
+                        $audioUrl = null;
+                        if ($track->audioAsset && !empty($track->audioAsset->path)) {
+                            $path = $track->audioAsset->path;
+                            $audioUrl = (strpos($path, 'http') === 0) ? $path : (Yii::getAlias('@web') . $path);
+                        }
+
+                        // Duration (optional)
+                        $duration = $track->duration ?? null;
                         ?>
 
-                        <div class="track-row">
-                            <div class="track-main">
-                                <a href="<?= $trackUrl ?>" class="track-cover-small">
-                                    <img src="<?= Html::encode($coverUrl) ?>" alt="">
-                                </a>
+                        <article class="tracks-item">
+                            <!-- Left: cover + text -->
+                            <a class="tracks-cover" href="<?= $trackUrl ?>">
+                                <img src="<?= Html::encode($coverUrl) ?>" alt="">
+                            </a>
 
-                                <div class="track-text">
-                                    <a href="<?= $trackUrl ?>" class="track-title-link">
-                                        <span class="track-title">
-                                            <?= Html::encode($track->title ?? 'Untitled') ?>
-                                        </span>
-                                    </a>
-                                    <span class="track-artist">
-                                        <?= Html::encode($artistName) ?>
-                                    </span>
-                                </div>
+                            <div class="tracks-info">
+                                <a class="tracks-name" href="<?= $trackUrl ?>">
+                                    <?= Html::encode($track->title ?? 'Untitled') ?>
+                                </a>
+                                <div class="tracks-artist"><?= Html::encode($artistName) ?></div>
                             </div>
 
-                            <div class="track-meta">
-                                <?php if (!empty($track->duration)): ?>
-                                    <span class="track-duration">
-                                        <?= Html::encode($track->duration) ?>
-                                    </span>
+                            <!-- Right: meta + actions -->
+                            <div class="tracks-actions">
+                                <?php if (!empty($duration)): ?>
+                                    <span class="tracks-duration"><?= Html::encode($duration) ?></span>
                                 <?php endif; ?>
-                                <button class="add-to-playlist-btn" data-track-id="<?= $track->id ?>">
-                                    ➕ Playlist
+
+                                <button class="tracks-btn tracks-btn--ghost add-to-playlist-btn" type="button"
+                                    data-track-id="<?= (int) $track->id ?>">
+                                    + Playlist
                                 </button>
 
                                 <?php if ($audioUrl): ?>
-
-                                    <button type="button" class="track-play-btn" data-id="<?= (int) $track->id ?>"
-                                        data-audio="<?= Html::encode($audioUrl) ?>"
+                                    <button class="tracks-btn tracks-btn--play track-play-btn" type="button"
+                                        data-id="<?= (int) $track->id ?>" data-audio="<?= Html::encode($audioUrl) ?>"
                                         data-title="<?= Html::encode($track->title ?? '') ?>"
                                         data-artist="<?= Html::encode($artistName) ?>" data-cover="<?= Html::encode($coverUrl) ?>">
                                         ▶
                                     </button>
                                 <?php else: ?>
-                                    <span class="track-no-audio">Sem áudio</span>
+                                    <span class="tracks-no-audio">Sem áudio</span>
                                 <?php endif; ?>
                             </div>
-                        </div>
+                        </article>
+
                     <?php endforeach; ?>
                 </div>
             <?php endif; ?>
@@ -100,72 +103,218 @@ $this->title = 'Tracks | PHONYX';
     <?php endforeach; ?>
 
 </div>
-
 <?php
-// JS: send the selected track to the global player
+$myPlaylistsUrl = Url::to(['playlist/my-playlists']);
+$addTrackUrl = Url::to(['playlist/add-track']);
+$csrfParam = Yii::$app->request->csrfParam;
+$csrfToken = Yii::$app->request->getCsrfToken();
+
 $this->registerJs(<<<JS
-(function() {
-  function updateButtons() {
-    const player = window.phonyxPlayer;
-    if (!player || !player.audio) return;
+(function () {
+  let openMenuEl = null;
+  let openBtnEl = null;
+  let cachedPlaylists = null;
+  let loading = false;
 
-    const currentId = String(player.currentId || '');
-    const isPlaying = !player.audio.paused;
-
-    document.querySelectorAll('.track-play-btn').forEach(btn => {
-      const id = String(btn.dataset.id || '');
-      const isCurrent = currentId && id === currentId;
-
-      // If this row is the current track and it's playing -> show pause icon
-      btn.textContent = (isCurrent && isPlaying) ? '❚❚' : '▶';
-    });
+  function closeMenu() {
+    if (openMenuEl) openMenuEl.remove();
+    openMenuEl = null;
+    openBtnEl = null;
   }
 
-  document.addEventListener('click', function(e) {
-    const btn = e.target.closest('.track-play-btn');
-    if (!btn) return;
+  function createMenu() {
+    const menu = document.createElement('div');
+    menu.className = 'pl-dd';
 
-    const id     = btn.dataset.id || '';
-    const src    = btn.dataset.audio;
-    const title  = btn.dataset.title || '';
-    const artist = btn.dataset.artist || '';
-    const cover  = btn.dataset.cover || '';
+    const header = document.createElement('div');
+    header.className = 'pl-dd__header';
+    header.innerHTML = '<div class="pl-dd__title">Add to playlist</div><button type="button" class="pl-dd__close" aria-label="Close">×</button>';
+    menu.appendChild(header);
 
-    if (!src) return;
+    const body = document.createElement('div');
+    body.className = 'pl-dd__body';
+    body.innerHTML = '<div class="pl-dd__loading">Loading…</div>';
+    menu.appendChild(body);
 
-    // If same track, just toggle play/pause
-    if (typeof window.phonyxTogglePlay === 'function') {
-      const toggled = window.phonyxTogglePlay(id);
-      if (toggled) {
-        updateButtons();
-        return;
+    header.querySelector('.pl-dd__close').addEventListener('click', closeMenu);
+    return menu;
+  }
+
+  function positionMenu(btn, menu) {
+    const r = btn.getBoundingClientRect();
+    const gap = 8;
+
+    // fixed so it doesn't break inside overflow containers
+    menu.style.position = 'fixed';
+    menu.style.top = (r.bottom + gap) + 'px';
+    menu.style.left = Math.min(r.left, window.innerWidth - 340) + 'px'; // keep inside screen
+    menu.style.width = Math.max(260, Math.min(320, r.width + 120)) + 'px';
+    menu.style.zIndex = 9999;
+  }
+
+  async function fetchPlaylists() {
+    if (cachedPlaylists) return cachedPlaylists;
+    if (loading) return null;
+
+    loading = true;
+    try {
+      const res = await fetch('$myPlaylistsUrl', { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+      const data = await res.json();
+      if (data && data.success) {
+        cachedPlaylists = data.playlists || [];
+        return cachedPlaylists;
       }
+      cachedPlaylists = [];
+      return cachedPlaylists;
+    } catch (e) {
+      cachedPlaylists = [];
+      return cachedPlaylists;
+    } finally {
+      loading = false;
+    }
+  }
+
+  async function addToPlaylist(playlistId, trackId) {
+    const form = new URLSearchParams();
+    form.append('playlist_id', String(playlistId));
+    form.append('track_id', String(trackId));
+    form.append('$csrfParam', '$csrfToken');
+
+    const res = await fetch('$addTrackUrl', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: form.toString()
+    });
+
+    return res.json().catch(() => ({}));
+  }
+
+  function renderPlaylists(menu, playlists, trackId) {
+    const body = menu.querySelector('.pl-dd__body');
+    body.innerHTML = '';
+
+    if (!playlists || playlists.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'pl-dd__empty';
+      empty.textContent = 'You have no playlists yet.';
+      body.appendChild(empty);
+      return;
     }
 
-    // Different track -> set and play
-    if (typeof window.phonyxSetTrack === 'function') {
-      window.phonyxSetTrack({ id, src, title, artist, cover });
-      updateButtons();
+    const list = document.createElement('div');
+    list.className = 'pl-dd__list';
+
+    playlists.forEach(p => {
+      const item = document.createElement('button');
+      item.type = 'button';
+      item.className = 'pl-dd__item';
+      item.innerHTML = '<span class="pl-dd__itemTitle"></span><span class="pl-dd__itemIcon">+</span>';
+      item.querySelector('.pl-dd__itemTitle').textContent = p.title;
+
+      item.addEventListener('click', async () => {
+        item.disabled = true;
+        item.classList.add('is-loading');
+
+        const result = await addToPlaylist(p.id, trackId);
+
+        item.classList.remove('is-loading');
+
+        if (result && result.success) {
+          item.classList.add('is-done');
+          item.querySelector('.pl-dd__itemIcon').textContent = '✓';
+          setTimeout(closeMenu, 450);
+          return;
+        }
+
+        item.disabled = false;
+        alert('Failed to add track to playlist.');
+      });
+
+      list.appendChild(item);
+    });
+
+    body.appendChild(list);
+  }
+
+  document.addEventListener('click', async function (e) {
+    const btn = e.target.closest('.add-to-playlist-btn');
+
+    // close when clicking outside
+    if (!btn) {
+      if (openMenuEl && !e.target.closest('.pl-dd')) closeMenu();
+      return;
     }
+
+    const trackId = parseInt(btn.dataset.trackId || '0', 10);
+    if (!trackId) return;
+
+    // toggle
+    if (openBtnEl === btn) {
+      closeMenu();
+      return;
+    }
+
+    closeMenu();
+
+    openBtnEl = btn;
+    openMenuEl = createMenu();
+    document.body.appendChild(openMenuEl);
+    positionMenu(btn, openMenuEl);
+
+    const playlists = await fetchPlaylists();
+    renderPlaylists(openMenuEl, playlists, trackId);
   });
 
-  // Keep UI in sync when playback changes
-  window.addEventListener('phonyx:trackchange', updateButtons);
-  window.addEventListener('phonyx:play', updateButtons);
-  window.addEventListener('phonyx:pause', updateButtons);
+  window.addEventListener('resize', () => {
+    if (openBtnEl && openMenuEl) positionMenu(openBtnEl, openMenuEl);
+  });
 
-  document.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const trackId = btn.dataset.trackId;
-        openPlaylistModal(trackId);
-    });
-});
-
-
-  // Initial render
-  updateButtons();
+  window.addEventListener('scroll', () => {
+    if (openBtnEl && openMenuEl) positionMenu(openBtnEl, openMenuEl);
+  }, true);
 })();
 
-
 JS);
+
+?>
+<?php
+$this->registerJs(<<<JS
+(function(){
+  document.addEventListener('click', function(e){
+    const playBtn = e.target.closest('.track-play-btn');
+    if (!playBtn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+
+    const src = playBtn.dataset.audio || '';
+    if (!src) {
+      console.log('[PLAY] botão sem data-audio');
+      return;
+    }
+
+    if (typeof window.phonyxSetTrack !== 'function') {
+      console.log('[PLAY] window.phonyxSetTrack não existe');
+      // fallback rápido só para testar áudio
+      try {
+        if (!window.__testAudio) window.__testAudio = new Audio();
+        window.__testAudio.src = src;
+        window.__testAudio.play().catch(()=>{});
+      } catch (err) {}
+      return;
+    }
+
+    window.phonyxSetTrack({
+      id: playBtn.dataset.id || '',
+      src: src,
+      title: playBtn.dataset.title || '',
+      artist: playBtn.dataset.artist || '',
+      cover: playBtn.dataset.cover || ''
+    });
+  });
+})();
+JS, \yii\web\View::POS_END);
 ?>

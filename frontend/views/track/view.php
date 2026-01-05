@@ -6,6 +6,10 @@ use yii\helpers\Html;
 use yii\helpers\Url;
 
 $this->title = $model->title . ' | PHONYX';
+$this->registerCssFile(
+    Yii::getAlias('@web/css/tracks.css'),
+    ['depends' => [\frontend\assets\AppAsset::class]]
+);
 
 // artistas em feat.
 $featNames = [];

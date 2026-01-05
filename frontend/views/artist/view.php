@@ -7,12 +7,31 @@ use yii\helpers\Url;
 
 $this->title = ($model->stage_name ?: 'Artist') . ' | PHONYX';
 
-// Avatar fallback
-$avatarUrl = Yii::getAlias('@web') . '/img/default-avatar.png';
+/**
+ * Resolve um Asset->path para URL web válida, com fallback.
+ * - aceita path absoluto (http/https)
+ * - aceita path relativo (uploads/...)
+ */
+$resolveAssetUrl = function ($asset, $fallbackWebPath) {
+    $fallback = Yii::getAlias('@web') . '/' . ltrim($fallbackWebPath, '/');
 
-if (!empty($model->avatar_asset_id) && $model->avatarAsset && !empty($model->avatarAsset->path)) {
-    $avatarUrl = Yii::getAlias('@web') . $model->avatarAsset->path;
-}
+    if (!$asset || empty($asset->path)) {
+        return $fallback;
+    }
+
+    $p = (string)$asset->path;
+
+    // URL absoluta
+    if (preg_match('~^https?://~i', $p)) {
+        return $p;
+    }
+
+    // path relativo
+    return Yii::getAlias('@web') . '/' . ltrim($p, '/');
+};
+
+// Avatar fallback (corrigido via Asset)
+$avatarUrl = $resolveAssetUrl($model->avatarAsset ?? null, 'img/default-avatar.png');
 
 // Linked user (optional info)
 $user = $model->user ?? null;
@@ -109,18 +128,20 @@ if (!Yii::$app->user->isGuest) {
             <div class="artist-tracks-list">
                 <?php foreach ($tracks as $track): ?>
                     <?php
-                        // Cover: your track table does NOT have cover_path in the schema (use default)
+                        // Cover (mantém default)
                         $coverUrl = Yii::getAlias('@web') . '/img/default-cover.png';
 
-                        // Audio: your schema stores audio in track.audio_asset_id -> asset.path
+                        // Audio: track.audio_asset_id -> asset.path
                         $audioUrl = null;
                         if ($track->audioAsset && !empty($track->audioAsset->path)) {
-                            $audioUrl = Yii::getAlias('@web') . $track->audioAsset->path;
+                            $p = (string)$track->audioAsset->path;
+                            $audioUrl = preg_match('~^https?://~i', $p)
+                                ? $p
+                                : (Yii::getAlias('@web') . '/' . ltrim($p, '/'));
                         }
 
                         $trackUrl = Url::to(['track/view', 'id' => $track->id]);
 
-                        // Duration: show raw seconds if you don't have a formatter method
                         $durationLabel = method_exists($track, 'getDurationLabel')
                             ? $track->durationLabel
                             : ($track->duration ?? '');
@@ -188,21 +209,20 @@ if (!Yii::$app->user->isGuest) {
             <div class="artist-albums-grid">
                 <?php foreach ($albums as $album): ?>
                     <?php
-                        // Your album table uses cover_asset_id (schema), so this "cover_path" may not exist.
-                        // For now, keep a default cover. Later we can map cover_asset_id -> asset.path.
-                        $albumCover = Yii::getAlias('@web') . '/img/default-cover.png';
+                        // ✅ capa real via coverAsset->path (cover_asset_id)
+                        $albumCover = $resolveAssetUrl($album->coverAsset ?? null, 'img/default-cover.png');
+                        $albumUrl = Url::to(['album/view', 'id' => $album->id]);
                     ?>
-                    <a href="<?= Url::to(['album/view', 'id' => $album->id]) ?>"
-                       class="artist-album-card">
 
+                    <a href="<?= $albumUrl ?>" class="artist-album-card">
                         <div class="artist-album-cover">
                             <img src="<?= Html::encode($albumCover) ?>"
-                                 alt="<?= Html::encode($album->title) ?>">
+                                 alt="<?= Html::encode($album->title ?: 'Album') ?>">
                         </div>
 
                         <div class="artist-album-text">
                             <span class="artist-album-title">
-                                <?= Html::encode($album->title) ?>
+                                <?= Html::encode($album->title ?: 'Sem título') ?>
                             </span>
                             <span class="artist-album-meta">
                                 <?= Yii::$app->formatter->asDate($album->created_at) ?>
@@ -217,10 +237,6 @@ if (!Yii::$app->user->isGuest) {
 </div>
 
 <?php
-// Client-side behaviors:
-// - play track button sends data to global player (window.phonyxSetTrack)
-// - "Play top tracks" plays the first track with audio
-// - follow/unfollow toggles using AJAX endpoints
 $this->registerJs(<<<JS
 (function () {
   // Play a specific track row

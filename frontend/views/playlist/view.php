@@ -16,19 +16,32 @@ $addUrl    = Url::to(['playlist/add-track']);
 $removeUrl = Url::to(['playlist/remove-track']);
 $searchUrl = Url::to(['track/search'], true);
 
-/* capa da playlist */
-$coverUrl = null;
+/* ===================== CAPA PLAYLIST ======================= */
+$coverPath = null;
 if (!empty($playlist->cover_asset_id)) {
   $coverAsset = \common\models\Asset::findOne((int)$playlist->cover_asset_id);
-  if ($coverAsset) $coverUrl = $coverAsset->path;
+  if ($coverAsset) $coverPath = (string)$coverAsset->path;
 }
 
-/* cache-bust BOM (não depende só do id) */
+
+$coverSrc = null;
+if (!empty($coverPath)) {
+  if (preg_match('~^https?://~i', $coverPath)) {
+    $coverSrc = $coverPath;
+  } else {
+    $p = $coverPath;
+    if ($p !== '' && $p[0] !== '/') $p = '/' . $p;
+    $coverSrc = Url::to('@web' . $p, true);
+  }
+}
+
+
 $coverBust = '?v=' . time();
 
-/* queue para o player */
+/* ===================== QUEUE (player) ===================== */
 $queue = [];
 foreach ($tracks as $t) {
+
   $audioPath = $t->audioAsset->path ?? null;
   if (!$audioPath) continue;
 
@@ -36,14 +49,21 @@ foreach ($tracks as $t) {
   if (isset($t->artist)) {
     $artistName = $t->artist->stage_name ?? ($t->artist->name ?? '');
   }
-  $audioUrl = Url::to('@web' . $audioPath, true);
 
-  if ($coverPath) {
-    $coverUrlTrack = Url::to('@web' . $coverPath, true);
-  } else {
-    $coverUrlTrack = Url::to('@web/img/default-cover.png', true);
+  $trackCoverPath = $t->coverAsset->path ?? null;
+
+
+  $ap = (string)$audioPath;
+  if ($ap !== '' && $ap[0] !== '/') $ap = '/' . $ap;
+  $audioUrl = Url::to('@web' . $ap, true);
+
+
+  $coverUrlTrack = Url::to('@web/img/default-cover.png', true);
+  if (!empty($trackCoverPath)) {
+    $cp = (string)$trackCoverPath;
+    if ($cp !== '' && $cp[0] !== '/') $cp = '/' . $cp;
+    $coverUrlTrack = Url::to('@web' . $cp, true);
   }
-  
 
   $queue[] = [
     'id'     => (int)$t->id,
@@ -55,6 +75,7 @@ foreach ($tracks as $t) {
 }
 
 $hasQueue = !empty($queue);
+$defaultCoverSearch = Url::to('@web/img/default-cover.png', true);
 ?>
 
 <div class="playlist-page">
@@ -63,8 +84,8 @@ $hasQueue = !empty($queue);
     <div class="playlist-hero-inner container">
 
       <button class="cover-btn" id="btnCover" type="button" title="Mudar capa">
-        <?php if ($coverUrl): ?>
-          <img src="<?= Html::encode(Url::to($coverUrl, true) . $coverBust) ?>" alt="Capa">
+        <?php if ($coverSrc): ?>
+          <img src="<?= Html::encode($coverSrc . $coverBust) ?>" alt="Capa">
         <?php else: ?>
           <div class="cover-placeholder">♪</div>
         <?php endif; ?>
@@ -168,6 +189,7 @@ const ADD_URL     = <?= json_encode($addUrl) ?>;
 const REMOVE_URL  = <?= json_encode($removeUrl) ?>;
 const SEARCH_URL  = <?= json_encode($searchUrl) ?>;
 const QUEUE       = <?= json_encode($queue, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?>;
+const DEFAULT_COVER = <?= json_encode($defaultCoverSearch) ?>;
 
 function postJson(url, data) {
   return fetch(url, {
@@ -203,8 +225,8 @@ function shuffleArray(arr){
   return a;
 }
 
-/* ========= INTEGRAÇÃO REAL COM O TEU PLAYER ========= */
-const audioEl = document.getElementById('phonyx-audio'); // existe no player.php
+/* ========= INTEGRAÇÃO COM O TEU PLAYER ========= */
+const audioEl = document.getElementById('phonyx-audio');
 let plQueue = QUEUE.slice();
 let plIndex = 0;
 
@@ -229,7 +251,6 @@ function playAt(index, autoplay=true){
   plIndex = Math.max(0, Math.min(index, plQueue.length - 1));
   const t = plQueue[plIndex];
 
-  // ESTE É O TEU PLAYER
   if (typeof window.phonyxSetTrack === 'function') {
     window.phonyxSetTrack({
       src: t.src,
@@ -244,7 +265,6 @@ function playAt(index, autoplay=true){
     return;
   }
 
-  // fallback (se por algum motivo o player não estiver carregado)
   if (audioEl) {
     audioEl.src = t.src;
     audioEl.currentTime = 0;
@@ -254,7 +274,7 @@ function playAt(index, autoplay=true){
 }
 
 function togglePlayPause(){
-  if (!audioEl) return; // sem player no layout
+  if (!audioEl) return;
   if (!audioEl.src && plQueue.length) playAt(0, true);
   else if (audioEl.paused) audioEl.play().catch(()=>{});
   else audioEl.pause();
@@ -268,7 +288,6 @@ function playTrackById(id){
   }
 }
 
-/* liga também aos botões do teu player (prev/next) */
 const btnPrev = document.getElementById('player-prev');
 const btnNext = document.getElementById('player-next');
 
@@ -343,7 +362,7 @@ function renderResults(items) {
 
   resultsBox.innerHTML = items.map(it => `
     <div class="plr-row">
-      <img class="plr-cover" src="${escapeHtml(it.cover || '/img/default-cover.png')}" alt="">
+      <img class="plr-cover" src="${escapeHtml(it.cover || DEFAULT_COVER)}" alt="">
       <div class="plr-meta">
         <div class="plr-title">${escapeHtml(it.title)}</div>
         <div class="plr-sub">${escapeHtml(it.artist || it.subtitle || '')}</div>
