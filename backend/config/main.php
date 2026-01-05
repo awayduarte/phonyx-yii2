@@ -44,18 +44,71 @@ return [
         ],
         // PrettyUrl
         'urlManager' => [
-            'enablePrettyUrl' => true,
-            'showScriptName' => false,
-            'rules' => [
-                ['class' => 'yii\rest\UrlRule','controller' => ['api/user'],
+        'enablePrettyUrl' => true,
+        'showScriptName' => false,
+        'rules' => [
+
+            //Tracks
+            [
+                'class' => 'yii\rest\UrlRule',
+                'controller' => ['api/track'],
+                'pluralize' => false,
                 'extraPatterns' => [
-                'GET count' => 'count', // 'count' is 'actionCount'
-                'GET nomes' => 'nomes', // 'noume' is 'actionNome'
-                    ],
+                    'GET search' => 'search',
+                    'GET latest' => 'latest',
+                    'GET trending' => 'trending',
+                    'POST {id}/like' => 'like',
+                    'DELETE {id}/like' => 'unlike',
                 ],
-                'api/user/<username>/nome' => 'api/user/nome',
+            ],
+
+            /*
+            * PLAYLISTS
+            */
+            [
+                'class' => 'yii\rest\UrlRule',
+                'controller' => ['api/playlist'],
+                'pluralize' => false,
+                'extraPatterns' => [
+                    'GET {id}/tracks' => 'tracks',
+                    'POST {id}/tracks/{trackId}' => 'add-track',
+                    'DELETE {id}/tracks/{trackId}' => 'remove-track',
+                    'PUT {id}/tracks/reorder' => 'reorder',
+                ],
+            ],
+
+            /*
+            * ARTISTS
+            */
+            [
+                'class' => 'yii\rest\UrlRule',
+                'controller' => ['api/artist'],
+                'pluralize' => false,
+                'extraPatterns' => [
+                    'GET {id}/tracks' => 'tracks',
+                    'GET {id}/albums' => 'albums',
+                    'POST {id}/follow' => 'follow',
+                    'DELETE {id}/follow' => 'unfollow',
+                    'GET count' => 'count',
+                ],
+            ],
+
+            /*
+            * USERS
+            */
+            [
+                'class' => 'yii\rest\UrlRule',
+                'controller' => ['api/user'],
+                'pluralize' => false,
+                'extraPatterns' => [
+                    'GET me' => 'me',
+                    'PUT me' => 'update-me',
+                    'GET {username}/nome' => 'nome',
+                ],
             ],
         ],
+    ],
+
         
     ],
     'params' => $params,

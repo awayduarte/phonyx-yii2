@@ -1,6 +1,6 @@
 <?php
 
-namespace api\controllers\v1;
+namespace backend\modules\api\controllers;
 
 use yii\rest\ActiveController;
 use yii\filters\auth\HttpBearerAuth;
@@ -11,7 +11,7 @@ use common\models\Playlist;
 use common\models\PlaylistTrack;
 use common\models\Track;
 
-class PlaylistsController extends ActiveController
+class PlaylistController extends ActiveController
 {
     public $modelClass = 'common\models\Playlist';
 
@@ -82,4 +82,25 @@ class PlaylistsController extends ActiveController
 
         return ['ok' => true];
     }
+
+     public function actionReorder($id)
+    {
+        $playlist = Playlist::findOne((int)$id);
+        $this->checkOwner($playlist);
+
+        $items = Yii::$app->request->bodyParams;
+
+        foreach ($items as $item) {
+            PlaylistTrack::updateAll(
+                ['position' => (int)$item['position']],
+                [
+                    'playlist_id' => $playlist->id,
+                    'track_id' => (int)$item['track_id'],
+                ]
+            );
+        }
+
+        return ['message' => 'Playlist reordered'];
+    }
+    
 }
