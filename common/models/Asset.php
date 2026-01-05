@@ -15,6 +15,8 @@ class Asset extends \yii\db\ActiveRecord
     // uploaded file (not stored in db)
     public $file;
 
+    public $used_count;
+
     public static function tableName()
     {
         return 'asset';

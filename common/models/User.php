@@ -25,8 +25,8 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     const ROLE_USER = 'user';
 
     // -----------------------
-// Virtual attributes
-// -----------------------
+    // Virtual attributes
+    // -----------------------
 
     public $password;
 
@@ -103,7 +103,6 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
             'access_token' => $token,
             'deleted_at' => null,
         ]);
-        
     }
 
     public function getId()
@@ -252,12 +251,37 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     {
         parent::afterSave($insert, $changedAttributes);
 
-        // If user is artist and has no artist profile, create it
-        if ($this->role === self::ROLE_ARTIST && $this->artist === null) {
-            $artist = new Artist();
-            $artist->user_id = $this->id;
-            $artist->stage_name = $this->username;
-            $artist->save(false);
+        // only act if role changed
+        if (!array_key_exists('role', $changedAttributes)) {
+            return;
+        }
+
+        // became artist
+        if ($this->role === self::ROLE_ARTIST) {
+
+            $artist = Artist::find()
+                ->where(['user_id' => $this->id])
+                ->one();
+
+            if ($artist) {
+                // restore soft deleted artist
+                if ($artist->isDeleted()) {
+                    $artist->restore();
+                }
+            } else {
+                // create new artist profile
+                $artist = new Artist();
+                $artist->user_id = $this->id;
+                $artist->stage_name = $this->username;
+                $artist->save(false);
+            }
+
+            return;
+        }
+
+        // left artist role
+        if ($this->artist && !$this->artist->isDeleted()) {
+            $this->artist->softDelete();
         }
     }
 
@@ -340,6 +364,4 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     {
         return self::optsRole()[$this->role] ?? null;
     }
-    
-
 }

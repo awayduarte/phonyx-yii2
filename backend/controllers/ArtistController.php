@@ -138,11 +138,13 @@ class ArtistController extends Controller
      */
     public function actionDelete($id)
     {
-        // physical delete (artists can be recreated)
-        $this->findModel($id)->delete();
+        $model = $this->findModel($id);
+
+        $model->softDelete();
 
         return $this->redirect(['index']);
     }
+
 
     /**
      * Finds the Artist model based on its primary key value.
