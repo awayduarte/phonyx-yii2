@@ -208,73 +208,93 @@ class TrackController extends Controller
     }
 
     public function actionUpdate($id)
-    {
-        /** @var \common\models\User $user */
-        $user = Yii::$app->user->identity;
+{
+    /** @var \common\models\User $user */
+    $user = Yii::$app->user->identity;
 
-        if (!$user || !$user->artist) {
-            throw new ForbiddenHttpException('You must have an artist account to edit tracks.');
-        }
-
-        $model = Track::find()
-            ->where(['id' => (int) $id, 'artist_id' => (int) $user->artist->id])
-            ->one();
-
-        if (!$model) {
-            throw new NotFoundHttpException('Track not found.');
-        }
-
-        $genres = Genre::find()->orderBy(['name' => SORT_ASC])->all();
-        $genreOptions = ArrayHelper::map($genres, 'id', 'name');
-
-        if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
-
-            $model->audioFile = UploadedFile::getInstance($model, 'audioFile');
-            $model->coverFile = UploadedFile::getInstance($model, 'coverFile');
-
-            if ($model->validate()) {
-
-                if ($model->audioFile) {
-                    $baseTrackPath = Yii::getAlias('@frontend/web/uploads/tracks');
-                    if (!is_dir($baseTrackPath)) {
-                        mkdir($baseTrackPath, 0775, true);
-                    }
-
-                    $trackFilename = uniqid('track_') . '.' . $model->audioFile->extension;
-                    $trackFullPath = $baseTrackPath . DIRECTORY_SEPARATOR . $trackFilename;
-
-                    if ($model->audioFile->saveAs($trackFullPath)) {
-                        $model->file_path = '/uploads/tracks/' . $trackFilename;
-                    }
-                }
-
-                if ($model->coverFile) {
-                    $baseCoverPath = Yii::getAlias('@frontend/web/uploads/covers');
-                    if (!is_dir($baseCoverPath)) {
-                        mkdir($baseCoverPath, 0775, true);
-                    }
-
-                    $coverFilename = uniqid('cover_') . '.' . $model->coverFile->extension;
-                    $coverFullPath = $baseCoverPath . DIRECTORY_SEPARATOR . $coverFilename;
-
-                    if ($model->coverFile->saveAs($coverFullPath)) {
-                        $model->cover_path = '/uploads/covers/' . $coverFilename;
-                    }
-                }
-
-                $model->save(false);
-
-                Yii::$app->session->setFlash('success', 'Track updated successfully.');
-                return $this->redirect(['artist/dashboard']);
-            }
-        }
-
-        return $this->render('update', [
-            'model' => $model,
-            'genreOptions' => $genreOptions,
-        ]);
+    if (!$user || !$user->artist) {
+        throw new ForbiddenHttpException('You must have an artist account to edit tracks.');
     }
 
+    $model = Track::find()
+        ->where(['id' => (int)$id, 'artist_id' => (int)$user->artist->id])
+        ->one();
+
+    if (!$model) {
+        throw new NotFoundHttpException('Track not found.');
+    }
+
+    $genres = Genre::find()->orderBy(['name' => SORT_ASC])->all();
+    $genreOptions = ArrayHelper::map($genres, 'id', 'name');
+
+    if (Yii::$app->request->isPost && $model->load(Yii::$app->request->post())) {
+
+        $model->audioFile = UploadedFile::getInstance($model, 'audioFile');
+       
+        $model->coverFile = UploadedFile::getInstance($model, 'coverFile');
+
+        if ($model->validate()) {
+
+            // ========= AUDIO UPDATE  =========
+            if ($model->audioFile) {
+                $baseTrackPath = Yii::getAlias('@frontend/web/uploads/tracks');
+                if (!is_dir($baseTrackPath)) {
+                    mkdir($baseTrackPath, 0775, true);
+                }
+
+                $trackFilename = uniqid('track_') . '.' . $model->audioFile->extension;
+                $trackFullPath = $baseTrackPath . DIRECTORY_SEPARATOR . $trackFilename;
+
+                if ($model->audioFile->saveAs($trackFullPath)) {
+                    $relativePath = 'uploads/tracks/' . $trackFilename;
+
+                   
+                    $audioAsset = $model->audio_asset_id ? Asset::findOne((int)$model->audio_asset_id) : null;
+                    if (!$audioAsset) {
+                        $audioAsset = new Asset();
+                        $audioAsset->type = 'audio';
+                    }
+
+                    $audioAsset->path = '/' . ltrim($relativePath, '/');
+
+                    if ($audioAsset->save(false)) {
+                        $model->audio_asset_id = (int)$audioAsset->id;
+
+                      
+                        $model->duration = null;
+                    } else {
+                        Yii::$app->session->setFlash('error', 'Failed to update audio asset.');
+                        return $this->render('update', [
+                            'model' => $model,
+                            'genreOptions' => $genreOptions,
+                        ]);
+                    }
+                } else {
+                    Yii::$app->session->setFlash('error', 'Failed to save audio file.');
+                    return $this->render('update', [
+                        'model' => $model,
+                        'genreOptions' => $genreOptions,
+                    ]);
+                }
+            }
+
+           
+            if ($model->coverFile) {
+                Yii::$app->session->setFlash('warning', 'Track cover is not supported yet (no DB column). Upload ignored.');
+            }
+
+            $model->save(false);
+
+            Yii::$app->session->setFlash('success', 'Track updated successfully.');
+            return $this->redirect(['artist/dashboard']);
+        }
+    }
+
+    return $this->render('update', [
+        'model' => $model,
+        'genreOptions' => $genreOptions,
+    ]);
+}
     public function actionSearch($q = '')
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
