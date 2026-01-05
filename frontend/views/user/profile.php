@@ -19,7 +19,7 @@ $createdAt = $user->created_at ?? null;
 
     <section class="profile-header">
     <?php
-// Pick user avatar (fallback to default)
+
 $avatarUrl = Yii::getAlias('@web') . '/img/default-avatar.png';
 
 if (!empty($user->profile_asset_id) && $user->profileAsset && !empty($user->profileAsset->path)) {
@@ -31,7 +31,7 @@ if (!empty($user->profile_asset_id) && $user->profileAsset && !empty($user->prof
     <img src="<?= \yii\helpers\Html::encode($avatarUrl) ?>" alt="Avatar">
 </div>
 
-        <!-- BLOCO DA DIREITA: info + botão artista -->
+        
         <div class="profile-header-main">
 
             <div class="profile-main">
@@ -72,7 +72,7 @@ if (!empty($user->profile_asset_id) && $user->profileAsset && !empty($user->prof
                 </div>
             </div>
 
-            <!-- BOTÃO GRANDE DE ARTISTA À DIREITA -->
+            
             <div class="profile-artist-button">
                 <?php if ($user->role === 'artist'): ?>
                     <a href="<?= Url::to(['artist/create']) ?>" class="btn-artist-big">

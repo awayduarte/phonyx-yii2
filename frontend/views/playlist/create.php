@@ -54,7 +54,6 @@ $this->title = 'Criar playlist';
 
             <label style="display:block;color:#fff;font-weight:700;margin-bottom:8px;">Privacidade</label>
             <?php
-            // tenta vários nomes (porque não sabemos o teu schema exato)
             $privacyAttr = null;
             foreach (['is_public', 'public', 'visibility', 'isPrivate'] as $a) {
                 if ($model->hasAttribute($a)) {

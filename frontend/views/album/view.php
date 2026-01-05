@@ -10,7 +10,7 @@ $model = $album;
 $this->title = (($model->title ?? 'Album')) . ' | PHONYX';
 
 
-/** Resolve asset path -> URL web */
+
 $resolveAssetUrl = function ($asset, $fallbackWebPath) {
     $fallback = Yii::getAlias('@web') . '/' . ltrim($fallbackWebPath, '/');
 
@@ -29,7 +29,6 @@ $resolveAssetUrl = function ($asset, $fallbackWebPath) {
 
 $albumCoverUrl = $resolveAssetUrl($model->coverAsset ?? null, 'img/default-cover.png');
 
-// Prepara lista JS de tracks com audio
 $jsTracks = [];
 foreach ($tracks as $t) {
     $audioUrl = null;
@@ -161,7 +160,7 @@ $trackCount = is_array($tracks) ? count($tracks) : 0;
 </div>
 
 <?php
-// JS: play album (fila) + play individual
+
 $jsTracksJson = json_encode($jsTracks, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
 
 $this->registerJs(<<<JS
@@ -172,7 +171,6 @@ $this->registerJs(<<<JS
     return albumTracks.findIndex(t => t && t.src);
   }
 
-  // Play album: toca a primeira e guarda fila para o player (se suportar)
   const playAlbumBtn = document.getElementById('album-play-btn');
   if (playAlbumBtn) {
     playAlbumBtn.addEventListener('click', function(){
@@ -184,8 +182,6 @@ $this->registerJs(<<<JS
         return;
       }
 
-      // Se o teu player suportar queue/playlist, manda também a lista:
-      // (se não suportar, não faz mal; ele vai tocar a primeira)
       const first = albumTracks[idx];
 
       window.phonyxSetTrack({
@@ -194,14 +190,13 @@ $this->registerJs(<<<JS
         title: first.title,
         artist: first.artist,
         cover: first.cover,
-        // extras (não rebenta se o player ignorar)
         queue: albumTracks.filter(t => t && t.src),
         queueIndex: albumTracks.filter(t => t && t.src).findIndex(t => t.id === first.id),
       });
     });
   }
 
-  // Play individual track
+
   document.addEventListener('click', function(e){
     const btn = e.target.closest('.dash-play-btn');
     if (!btn) return;

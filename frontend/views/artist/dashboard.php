@@ -32,7 +32,7 @@ $totalPlays = 0;
                 Edit artist profile
             </a>
 
-            <!-- FIX: $model não existe -> usa $artist -->
+            <!-- FIX -->
             <a href="<?= Url::to(['artist/view', 'id' => $artist->id]) ?>"
                 class="artist-edit-action-btn artist-edit-action-btn--accent">
                 View public profile
@@ -52,7 +52,7 @@ $totalPlays = 0;
             <p>Começa por aqui:</p>
 
             <div class="artist-dash-quick">
-                <!-- FIX: link real -->
+                
                 <a href="<?= Url::to(['album/create']) ?>" class="artist-dash-pill">+ Criar álbum</a>
                 <a href="#" class="artist-dash-pill ghost">Ver estatísticas</a>
             </div>
@@ -205,10 +205,10 @@ $totalPlays = 0;
                         $albumCoverUrl = Yii::getAlias('@web') . '/' . ltrim($album->cover_path, '/');
                     }
 
-                    // se não tiveres album/view, podes apontar para update
+
                     $albumViewUrl = Url::to(['album/update', 'id' => $album->id]);
 
-                    // contador de faixas do álbum (assume track.album_id existe)
+
                     $albumTracksCount = (int) \common\models\Track::find()
                         ->where(['album_id' => $album->id])
                         ->count();

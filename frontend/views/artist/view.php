@@ -260,7 +260,7 @@ if (!Yii::$app->user->isGuest) {
         <?php endif; ?>
     </section>
 
-    <!-- COMMUNITY (Spotify style rows) -->
+    <!-- COMMUNITY -->
 <section class="artist-section">
     <div class="sp-rowhead">
         <h2 class="sp-rowtitle">Seguidores</h2>

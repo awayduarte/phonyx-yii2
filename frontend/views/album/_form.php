@@ -12,12 +12,12 @@ $form = ActiveForm::begin([
     'options' => ['enctype' => 'multipart/form-data']
 ]);
 
-// cover url (usa Asset)
+
 $coverUrl = Yii::getAlias('@web') . '/img/default-cover.png';
 if (!empty($model->coverAsset) && !empty($model->coverAsset->path)) {
-    $p = (string)$model->coverAsset->path;
+    $p = (string) $model->coverAsset->path;
 
-    // se já for URL absoluta
+
     if (preg_match('~^https?://~i', $p)) {
         $coverUrl = $p;
     } else {
@@ -78,15 +78,10 @@ if (!empty($model->coverAsset) && !empty($model->coverAsset->path)) {
         <?php if (!empty($trackOptions)): ?>
             <div class="album-track-box" id="album-track-box">
                 <?php foreach ($trackOptions as $id => $title): ?>
-                    <?php $id = (int)$id; ?>
+                    <?php $id = (int) $id; ?>
                     <label class="album-track-item">
-                        <input
-                            type="checkbox"
-                            class="album-track-checkbox"
-                            name="trackIds[]"
-                            value="<?= $id ?>"
-                            <?= in_array($id, $selectedTrackIds, true) ? 'checked' : '' ?>
-                        >
+                        <input type="checkbox" class="album-track-checkbox" name="trackIds[]" value="<?= $id ?>"
+                            <?= in_array($id, $selectedTrackIds, true) ? 'checked' : '' ?>>
                         <span class="album-track-text">
                             <span class="album-track-title">
                                 <?= Html::encode($title ?: 'Sem título') ?>
@@ -102,13 +97,11 @@ if (!empty($model->coverAsset) && !empty($model->coverAsset->path)) {
                     Selecionadas: <strong><?= count($selectedTrackIds) ?></strong> / 20
                 </p>
 
-                <button type="button" class="artist-dash-pill ghost"
-                    onclick="
+                <button type="button" class="artist-dash-pill ghost" onclick="
                         document.querySelectorAll('.album-track-checkbox').forEach(cb=>cb.checked=false);
                         const ev = new Event('change');
                         document.querySelectorAll('.album-track-checkbox').forEach(cb=>cb.dispatchEvent(ev));
-                    "
-                >
+                    ">
                     Limpar
                 </button>
             </div>
@@ -157,5 +150,3 @@ $this->registerJs(<<<JS
 })();
 JS);
 ?>
-
-

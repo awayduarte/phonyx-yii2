@@ -68,7 +68,6 @@ foreach ($tracks as $t) {
     $artistName = $t->artist->stage_name ?? ($t->artist->name ?? '');
   }
 
-  // NOTE: some projects don't have track cover relation; keep safe
   $trackCoverPath = null;
   if (isset($t->coverAsset) && $t->coverAsset) {
     $trackCoverPath = $t->coverAsset->path ?? null;

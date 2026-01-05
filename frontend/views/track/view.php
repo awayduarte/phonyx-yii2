@@ -95,7 +95,6 @@ $featLabel = $featNames ? ' feat. ' . implode(', ', $featNames) : '';
         </div>
     </div>
 
-    <!-- bloco estatísticas / info extra -->
     <section class="track-extra">
         <div class="track-extra-card">
             <h2>Sobre esta faixa</h2>

@@ -8,10 +8,7 @@ use yii\bootstrap5\ActiveForm;
 
 $this->title = 'Edit artist profile | PHONYX';
 
-/**
- * Load a dedicated stylesheet for this page only.
- * Keep CSS out of the view (clean Yii approach).
- */
+
 $this->registerCssFile(
     Yii::getAlias('@web/css/artist-edit.css'),
     ['depends' => [\frontend\assets\AppAsset::class]]
