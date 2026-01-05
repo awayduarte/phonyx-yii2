@@ -364,4 +364,11 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     {
         return self::optsRole()[$this->role] ?? null;
     }
+
+    public function getLikedPlaylists()
+    {
+        return $this->hasMany(\common\models\Playlist::class, ['id' => 'playlist_id'])
+            ->viaTable('{{%playlist_like}}', ['user_id' => 'id']);
+    }
+
 }

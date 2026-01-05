@@ -5,9 +5,8 @@ use yii\helpers\Url;
 // Like route
 $toggleLikeUrl = Url::to(['playlist/toggle-like']);
 $csrf          = Yii::$app->request->csrfToken;
-$isGuest       = Yii::$app->user->isGuest ? '1' : '0';
 
-// Default track (home)
+// Default track
 $defaultSrc    = Yii::getAlias('@web/media/disstrack-albert.mp3');
 $defaultTitle  = 'Disstrack Albert';
 $defaultArtist = 'Phonyx · Single';
@@ -15,7 +14,6 @@ $defaultArtist = 'Phonyx · Single';
 
 <section class="player-shell" id="player-shell"
          data-track-id=""
-         data-is-guest="<?= Html::encode($isGuest) ?>"
          data-default-src="<?= Html::encode($defaultSrc) ?>"
          data-default-title="<?= Html::encode($defaultTitle) ?>"
          data-default-artist="<?= Html::encode($defaultArtist) ?>">
@@ -34,9 +32,11 @@ $defaultArtist = 'Phonyx · Single';
         <div class="player-center">
             <div class="player-controls">
                 <button class="player-btn player-small" type="button" id="player-prev">⏮</button>
+
                 <button class="player-btn player-main" type="button" id="player-play">
                     <span id="player-play-icon">▶</span>
                 </button>
+
                 <button class="player-btn player-small" type="button" id="player-next">⏭</button>
             </div>
 
@@ -54,7 +54,7 @@ $defaultArtist = 'Phonyx · Single';
             <button type="button"
                     id="player-like-btn"
                     class="player-like-btn"
-                    title="Add to likes">
+                    title="Add to Likes">
                 ♡
             </button>
 
@@ -71,12 +71,14 @@ $defaultArtist = 'Phonyx · Single';
 <?php
 $this->registerJs(<<<JS
 (function () {
-  const audio         = document.getElementById('phonyx-audio');
-  const shell         = document.getElementById('player-shell');
+  const audio = document.getElementById('phonyx-audio');
+  const shell = document.getElementById('player-shell');
   if (!audio || !shell) return;
 
   const playBtn       = document.getElementById('player-play');
   const playIcon      = document.getElementById('player-play-icon');
+  const prevBtn       = document.getElementById('player-prev');
+  const nextBtn       = document.getElementById('player-next');
   const progressBar   = document.getElementById('player-progress-bar');
   const progressFill  = document.getElementById('player-progress-fill');
   const currentTimeEl = document.getElementById('player-current-time');
@@ -84,30 +86,33 @@ $this->registerJs(<<<JS
   const volumeSlider  = document.getElementById('player-volume');
   const toggleBtn     = document.getElementById('player-toggle');
   const likeBtn       = document.getElementById('player-like-btn');
-  const prevBtn       = document.getElementById('player-prev');
-  const nextBtn       = document.getElementById('player-next');
 
-  const titleEl       = shell.querySelector('.player-title');
-  const artistEl      = shell.querySelector('.player-artist');
-  const coverEl       = shell.querySelector('.player-cover');
+  const titleEl  = shell.querySelector('.player-title');
+  const artistEl = shell.querySelector('.player-artist');
+  const coverEl  = shell.querySelector('.player-cover');
 
   const csrfToken     = '$csrf';
   const toggleLikeUrl = '$toggleLikeUrl';
-  const isGuest       = shell.dataset.isGuest === '1';
 
   // Global player state
-  window.phonyxPlayer = window.phonyxPlayer || {};
-  const P = window.phonyxPlayer;
-  P.audio = audio;
-  P.queue = Array.isArray(P.queue) ? P.queue : [];
-  P.queueIndex = typeof P.queueIndex === 'number' ? P.queueIndex : -1;
-  P.currentId = P.currentId || '';
+  const state = {
+    audio,
+    queue: [],
+    currentIndex: -1,
+    currentId: '',
+  };
+
+  window.phonyxPlayer = state;
+
+  function emit(name) {
+    window.dispatchEvent(new Event(name));
+  }
 
   function formatTime(sec) {
     if (!sec || isNaN(sec)) return '0:00';
-    const minutes = Math.floor(sec / 60);
-    const seconds = Math.floor(sec % 60).toString().padStart(2, '0');
-    return minutes + ':' + seconds;
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60).toString().padStart(2,'0');
+    return m + ':' + s;
   }
 
   function updatePlayIcon() {
@@ -117,15 +122,45 @@ $this->registerJs(<<<JS
 
   function setLikeState(isLiked) {
     if (!likeBtn) return;
-    likeBtn.classList.toggle('is-liked', !!isLiked);
-    likeBtn.textContent = isLiked ? '♥' : '♡';
+    if (isLiked) {
+      likeBtn.classList.add('is-liked');
+      likeBtn.textContent = '♥';
+    } else {
+      likeBtn.classList.remove('is-liked');
+      likeBtn.textContent = '♡';
+    }
   }
 
-  function dispatch(name) {
-    try { window.dispatchEvent(new CustomEvent(name)); } catch(e) {}
+  function getQueueItemById(id) {
+    const idx = state.queue.findIndex(t => String(t.id) === String(id));
+    if (idx === -1) return { idx: -1, item: null };
+    return { idx, item: state.queue[idx] };
   }
 
-  // ====== AUDIO EVENTS ======
+  function applyMeta(opts) {
+    if (titleEl)  titleEl.textContent  = opts.title || '';
+    if (artistEl) artistEl.textContent = opts.artist || '';
+    if (coverEl) {
+      if (opts.cover) {
+        coverEl.style.backgroundImage    = 'url(' + opts.cover + ')';
+        coverEl.style.backgroundSize     = 'cover';
+        coverEl.style.backgroundRepeat   = 'no-repeat';
+        coverEl.style.backgroundPosition = 'center';
+      } else {
+        coverEl.style.backgroundImage = '';
+      }
+    }
+  }
+
+  function setCurrentById(id) {
+    const found = getQueueItemById(id);
+    state.currentIndex = found.idx;
+    state.currentId = String(id || '');
+    shell.dataset.trackId = String(id || '');
+    setLikeState(!!(found.item && found.item.isLiked));
+  }
+
+  // ===== Audio events =====
   audio.addEventListener('loadedmetadata', function () {
     if (durationEl) durationEl.textContent = formatTime(audio.duration);
   });
@@ -138,25 +173,22 @@ $this->registerJs(<<<JS
     }
   });
 
-  audio.addEventListener('play', function () {
+  audio.addEventListener('play', function(){
     updatePlayIcon();
-    dispatch('phonyx:play');
+    emit('phonyx:play');
   });
 
-  audio.addEventListener('pause', function () {
+  audio.addEventListener('pause', function(){
     updatePlayIcon();
-    dispatch('phonyx:pause');
+    emit('phonyx:pause');
   });
 
-  // Auto-next on end
-  audio.addEventListener('ended', function () {
-    if (typeof window.phonyxNext === 'function') {
-      const ok = window.phonyxNext();
-      if (!ok) audio.pause();
-    }
+  audio.addEventListener('ended', function(){
+    // Auto-next
+    window.phonyxNext();
   });
 
-  // ====== CONTROLS ======
+  // ===== Controls =====
   if (playBtn) {
     playBtn.addEventListener('click', function () {
       if (!audio.src) return;
@@ -169,9 +201,8 @@ $this->registerJs(<<<JS
     progressBar.addEventListener('click', function (e) {
       if (!audio.duration) return;
       const rect = progressBar.getBoundingClientRect();
-      const clickX = e.clientX - rect.left;
-      const percent = clickX / rect.width;
-      audio.currentTime = audio.duration * percent;
+      const x = e.clientX - rect.left;
+      audio.currentTime = audio.duration * (x / rect.width);
     });
   }
 
@@ -189,80 +220,11 @@ $this->registerJs(<<<JS
     });
   }
 
-  // Prev/Next buttons
-  if (prevBtn) prevBtn.addEventListener('click', function () {
-    if (typeof window.phonyxPrev === 'function') window.phonyxPrev();
-  });
-
-  if (nextBtn) nextBtn.addEventListener('click', function () {
-    if (typeof window.phonyxNext === 'function') window.phonyxNext();
-  });
-
-  // ====== QUEUE API ======
-  window.phonyxSetQueue = function (tracks, startId) {
-    P.queue = Array.isArray(tracks) ? tracks.filter(t => t && t.src) : [];
-    P.queueIndex = -1;
-
-    if (P.queue.length) {
-      if (startId) {
-        const idx = P.queue.findIndex(t => String(t.id) === String(startId));
-        P.queueIndex = idx >= 0 ? idx : 0;
-      } else {
-        P.queueIndex = 0;
-      }
-    }
-  };
-
-  window.phonyxNext = function () {
-    if (!P.queue || !P.queue.length) return false;
-    if (P.queueIndex < 0) P.queueIndex = 0;
-    P.queueIndex = (P.queueIndex + 1) % P.queue.length;
-
-    const t = P.queue[P.queueIndex];
-    if (!t) return false;
-
-    window.phonyxSetTrack({ ...t, autoplay: true });
-    return true;
-  };
-
-  window.phonyxPrev = function () {
-    if (P.audio && P.audio.currentTime > 3) {
-      P.audio.currentTime = 0;
-      return true;
-    }
-
-    if (!P.queue || !P.queue.length) return false;
-    if (P.queueIndex < 0) P.queueIndex = 0;
-    P.queueIndex = (P.queueIndex - 1 + P.queue.length) % P.queue.length;
-
-    const t = P.queue[P.queueIndex];
-    if (!t) return false;
-
-    window.phonyxSetTrack({ ...t, autoplay: true });
-    return true;
-  };
-
-  // Optional helper: toggle play only if same track
-  window.phonyxTogglePlay = function (trackId) {
-    const currentId = String(P.currentId || '');
-    const wantId = String(trackId || '');
-    if (!currentId || !wantId || currentId !== wantId) return false;
-
-    if (audio.paused) audio.play().catch(console.error);
-    else audio.pause();
-    return true;
-  };
-
-  // ====== LIKES ======
+  // ===== Like =====
   if (likeBtn) {
     likeBtn.addEventListener('click', function () {
       const trackId = shell.dataset.trackId;
       if (!trackId) return;
-
-      if (isGuest) {
-        alert('You need to login to like tracks.');
-        return;
-      }
 
       fetch(toggleLikeUrl, {
         method: 'POST',
@@ -272,62 +234,122 @@ $this->registerJs(<<<JS
       .then(r => r.json())
       .then(data => {
         if (!data || !data.success) return;
-        setLikeState(data.state === 'added');
+
+        const liked = (data.state === 'added');
+        setLikeState(liked);
+
+        // Update queue item state
+        const found = getQueueItemById(trackId);
+        if (found.item) found.item.isLiked = liked;
       })
       .catch(console.error);
     });
   }
 
-  // ====== GLOBAL SET TRACK ======
+  // ===== Queue API =====
+  window.phonyxSetQueue = function(queue, startId) {
+    state.queue = Array.isArray(queue) ? queue : [];
+    if (startId) {
+      const found = getQueueItemById(startId);
+      state.currentIndex = found.idx;
+      state.currentId = String(startId || '');
+    }
+  };
+
+  function playByIndex(index) {
+    if (!state.queue.length) return;
+    if (index < 0 || index >= state.queue.length) return;
+
+    const t = state.queue[index];
+    if (!t || !t.src) return;
+
+    state.currentIndex = index;
+    state.currentId = String(t.id || '');
+    shell.dataset.trackId = state.currentId;
+
+    audio.src = t.src;
+    audio.currentTime = 0;
+
+    applyMeta(t);
+    setLikeState(!!t.isLiked);
+
+    shell.classList.remove('collapsed');
+    audio.play().catch(console.error);
+
+    emit('phonyx:trackchange');
+  }
+
+  window.phonyxNext = function() {
+    if (state.queue.length && state.currentIndex >= 0) {
+      const next = state.currentIndex + 1;
+      if (next < state.queue.length) return playByIndex(next);
+      // End of queue -> stop (or restart if you want)
+      audio.pause();
+      audio.currentTime = 0;
+      updatePlayIcon();
+      return;
+    }
+    // No queue -> just restart current
+    if (audio.src) audio.currentTime = 0;
+  };
+
+  window.phonyxPrev = function() {
+    // If track has played more than 3s -> restart
+    if (audio.currentTime > 3) {
+      audio.currentTime = 0;
+      return;
+    }
+
+    if (state.queue.length && state.currentIndex >= 0) {
+      const prev = state.currentIndex - 1;
+      if (prev >= 0) return playByIndex(prev);
+      // First track -> restart
+      audio.currentTime = 0;
+      return;
+    }
+
+    // No queue
+    audio.currentTime = 0;
+  };
+
+  if (nextBtn) nextBtn.addEventListener('click', window.phonyxNext);
+  if (prevBtn) prevBtn.addEventListener('click', window.phonyxPrev);
+
+  // ===== Toggle play helper =====
+  window.phonyxTogglePlay = function(optionalId) {
+    const id = String(optionalId || '');
+    if (id && state.currentId && id !== state.currentId) return false;
+
+    if (!audio.src) return false;
+    if (audio.paused) audio.play().catch(console.error);
+    else audio.pause();
+    return true;
+  };
+
+  // ===== Main API for pages =====
   window.phonyxSetTrack = function (opts) {
     if (!opts || !opts.src) return;
+
+    // If queue exists and id is inside it, sync index
+    const tid = (opts.trackId ?? opts.id ?? '');
+    if (tid) setCurrentById(tid);
 
     audio.src = opts.src;
     audio.currentTime = 0;
 
+    applyMeta(opts);
+
     if (opts.autoplay === false) audio.pause();
     else audio.play().catch(console.error);
 
-    if (titleEl) titleEl.textContent = (opts.title || '');
-    if (artistEl) artistEl.textContent = (opts.artist || '');
-
-    if (coverEl) {
-      if (opts.cover) {
-        coverEl.style.backgroundImage    = 'url(' + opts.cover + ')';
-        coverEl.style.backgroundSize     = 'cover';
-        coverEl.style.backgroundRepeat   = 'no-repeat';
-        coverEl.style.backgroundPosition = 'center';
-      } else {
-        coverEl.style.backgroundImage = '';
-      }
-    }
-
-    // Track id
-    const tid = (opts.trackId !== undefined && opts.trackId !== null && String(opts.trackId) !== '')
-      ? String(opts.trackId)
-      : String(opts.id || '');
-
-    shell.dataset.trackId = tid;
-    P.currentId = tid;
-
-    // Sync queueIndex if exists
-    if (P.queue && P.queue.length && tid) {
-      const idx = P.queue.findIndex(t => String(t.id) === tid);
-      if (idx >= 0) P.queueIndex = idx;
-    }
-
-    // Like state
-    setLikeState(!!opts.isLiked);
-
     shell.classList.remove('collapsed');
-    updatePlayIcon();
 
-    dispatch('phonyx:trackchange');
+    emit('phonyx:trackchange');
   };
 
-  // ====== DEFAULT TRACK ON LOAD ======
-  const defSrc    = shell.dataset.defaultSrc;
-  const defTitle  = shell.dataset.defaultTitle;
+  // ===== Default track on load =====
+  const defSrc = shell.dataset.defaultSrc;
+  const defTitle = shell.dataset.defaultTitle;
   const defArtist = shell.dataset.defaultArtist;
 
   if (defSrc) {
@@ -341,6 +363,7 @@ $this->registerJs(<<<JS
       autoplay: false
     });
   }
+
 })();
 JS);
 ?>

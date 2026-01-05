@@ -16,13 +16,12 @@ $addUrl    = Url::to(['playlist/add-track']);
 $removeUrl = Url::to(['playlist/remove-track']);
 $searchUrl = Url::to(['track/search'], true);
 
-/* ===================== CAPA PLAYLIST ======================= */
+/* ===================== PLAYLIST COVER ===================== */
 $coverPath = null;
 if (!empty($playlist->cover_asset_id)) {
   $coverAsset = \common\models\Asset::findOne((int)$playlist->cover_asset_id);
   if ($coverAsset) $coverPath = (string)$coverAsset->path;
 }
-
 
 $coverSrc = null;
 if (!empty($coverPath)) {
@@ -35,13 +34,32 @@ if (!empty($coverPath)) {
   }
 }
 
-
 $coverBust = '?v=' . time();
+
+/* ===================== PLAYLIST LIKE ===================== */
+$likeUrl   = Url::to(['playlist/like', 'id' => $playlist->id]);
+$unlikeUrl = Url::to(['playlist/unlike', 'id' => $playlist->id]);
+$loginUrl  = Url::to(['site/login'], true);
+
+$isLiked = false;
+$likeCount = (int)(new \yii\db\Query())
+  ->from('{{%playlist_like}}')
+  ->where(['playlist_id' => (int)$playlist->id])
+  ->count();
+
+if (!Yii::$app->user->isGuest) {
+  $isLiked = (new \yii\db\Query())
+    ->from('{{%playlist_like}}')
+    ->where([
+      'playlist_id' => (int)$playlist->id,
+      'user_id' => (int)Yii::$app->user->id,
+    ])
+    ->exists();
+}
 
 /* ===================== QUEUE (player) ===================== */
 $queue = [];
 foreach ($tracks as $t) {
-
   $audioPath = $t->audioAsset->path ?? null;
   if (!$audioPath) continue;
 
@@ -50,13 +68,15 @@ foreach ($tracks as $t) {
     $artistName = $t->artist->stage_name ?? ($t->artist->name ?? '');
   }
 
-  $trackCoverPath = $t->coverAsset->path ?? null;
-
+  // NOTE: some projects don't have track cover relation; keep safe
+  $trackCoverPath = null;
+  if (isset($t->coverAsset) && $t->coverAsset) {
+    $trackCoverPath = $t->coverAsset->path ?? null;
+  }
 
   $ap = (string)$audioPath;
   if ($ap !== '' && $ap[0] !== '/') $ap = '/' . $ap;
   $audioUrl = Url::to('@web' . $ap, true);
-
 
   $coverUrlTrack = Url::to('@web/img/default-cover.png', true);
   if (!empty($trackCoverPath)) {
@@ -107,8 +127,22 @@ $defaultCoverSearch = Url::to('@web/img/default-cover.png', true);
         <div class="playlist-hero-cta">
           <button class="btn-play-big" type="button" id="btnPlayPlaylist" <?= $hasQueue ? '' : 'disabled' ?>>▶</button>
           <button class="btn-icon" type="button" id="btnShuffle" <?= $hasQueue ? '' : 'disabled' ?>>🔀</button>
+
+          <!-- Like / Unlike playlist -->
+          <button
+            class="btn-icon btn-like-playlist <?= $isLiked ? 'is-liked' : '' ?>"
+            type="button"
+            id="btnLikePlaylist"
+            data-liked="<?= $isLiked ? '1' : '0' ?>"
+            title="<?= $isLiked ? 'Liked' : 'Like' ?>"
+          >
+            <span class="like-heart"><?= $isLiked ? '♥' : '♡' ?></span>
+            <span class="like-count" id="likeCount"><?= (int)$likeCount ?></span>
+          </button>
+
           <button class="btn-icon" type="button" id="btnAddCurrent" title="Adicionar música a tocar">＋</button>
         </div>
+
       </div>
 
     </div>
@@ -191,19 +225,28 @@ const SEARCH_URL  = <?= json_encode($searchUrl) ?>;
 const QUEUE       = <?= json_encode($queue, JSON_UNESCAPED_SLASHES|JSON_UNESCAPED_UNICODE) ?>;
 const DEFAULT_COVER = <?= json_encode($defaultCoverSearch) ?>;
 
+const LIKE_URL   = <?= json_encode($likeUrl) ?>;
+const UNLIKE_URL = <?= json_encode($unlikeUrl) ?>;
+const LOGIN_URL  = <?= json_encode($loginUrl) ?>;
+const IS_GUEST   = <?= Yii::$app->user->isGuest ? 'true' : 'false' ?>;
+
+function getCsrfToken() {
+  return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+}
+
 function postJson(url, data) {
   return fetch(url, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
-      'X-CSRF-Token': yii.getCsrfToken(),
+      'X-CSRF-Token': getCsrfToken(),
       'X-Requested-With': 'XMLHttpRequest'
     },
     body: new URLSearchParams(data).toString()
   }).then(async r => {
     const txt = await r.text();
     try { return JSON.parse(txt); }
-    catch(e) { console.log('RAW:', txt); return {success:false}; }
+    catch(e) { console.log('RAW:', txt); return {ok:false, success:false}; }
   });
 }
 
@@ -225,7 +268,7 @@ function shuffleArray(arr){
   return a;
 }
 
-/* ========= INTEGRAÇÃO COM O TEU PLAYER ========= */
+/* ========= PLAYER INTEGRATION ========= */
 const audioEl = document.getElementById('phonyx-audio');
 let plQueue = QUEUE.slice();
 let plIndex = 0;
@@ -312,6 +355,37 @@ if (btnShuffle) btnShuffle.addEventListener('click', () => {
   playAt(0, true);
 });
 
+/* LIKE PLAYLIST */
+const btnLikePlaylist = document.getElementById('btnLikePlaylist');
+if (btnLikePlaylist) {
+  btnLikePlaylist.addEventListener('click', async () => {
+    if (IS_GUEST) { window.location.href = LOGIN_URL; return; }
+
+    const liked = btnLikePlaylist.dataset.liked === '1';
+    const url = liked ? UNLIKE_URL : LIKE_URL;
+
+    btnLikePlaylist.disabled = true;
+    try {
+      const res = await postJson(url, {});
+      if (!res || !res.ok) return;
+
+      const newLiked = !!res.liked;
+      btnLikePlaylist.dataset.liked = newLiked ? '1' : '0';
+      btnLikePlaylist.classList.toggle('is-liked', newLiked);
+
+      const heart = btnLikePlaylist.querySelector('.like-heart');
+      const count = document.getElementById('likeCount');
+      if (heart) heart.textContent = newLiked ? '♥' : '♡';
+      if (count && typeof res.count !== 'undefined') count.textContent = String(res.count);
+
+    } catch (e) {
+      console.log(e);
+    } finally {
+      btnLikePlaylist.disabled = false;
+    }
+  });
+}
+
 /* ADD CURRENT */
 const btnAddCurrent = document.getElementById('btnAddCurrent');
 if (btnAddCurrent) btnAddCurrent.addEventListener('click', async () => {
@@ -321,17 +395,17 @@ if (btnAddCurrent) btnAddCurrent.addEventListener('click', async () => {
   if (res.success) location.reload();
 });
 
-/* CAPA */
-document.getElementById('btnCover').addEventListener('click', () => {
-  document.getElementById('coverInput').click();
+/* COVER UPLOAD */
+document.getElementById('btnCover')?.addEventListener('click', () => {
+  document.getElementById('coverInput')?.click();
 });
-document.getElementById('coverInput').addEventListener('change', () => {
+document.getElementById('coverInput')?.addEventListener('change', () => {
   if (document.getElementById('coverInput').files.length) {
     document.getElementById('coverForm').submit();
   }
 });
 
-/* REMOVE */
+/* REMOVE TRACK */
 document.querySelectorAll('.btnRemove').forEach(btn => {
   btn.addEventListener('click', async () => {
     const trackId = btn.dataset.trackId;
@@ -390,20 +464,20 @@ async function doSearch(q) {
   renderResults(items);
 }
 
-queryInput.addEventListener('input', () => {
+queryInput?.addEventListener('input', () => {
   const q = queryInput.value.trim();
   clearTimeout(searchTimer);
   if (q.length < 2) { resultsBox.innerHTML = ''; return; }
   searchTimer = setTimeout(() => doSearch(q), 220);
 });
 
-btnClear.addEventListener('click', () => {
+btnClear?.addEventListener('click', () => {
   queryInput.value = '';
   resultsBox.innerHTML = '';
   queryInput.focus();
 });
 
-btnClose.addEventListener('click', () => {
+btnClose?.addEventListener('click', () => {
   findBox.remove();
 });
 </script>

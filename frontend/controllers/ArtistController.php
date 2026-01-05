@@ -17,38 +17,44 @@ class ArtistController extends Controller
     public function behaviors()
     {
         return [
-            // Access rules
             'access' => [
-                'class' => \yii\filters\AccessControl::class,
-                'only' => ['create', 'dashboard', 'delete-track'],
+                'class' => AccessControl::class,
+                'only' => ['create', 'dashboard', 'delete-track', 'follow', 'unfollow'],
                 'rules' => [
                     [
                         'allow' => true,
-                        'roles' => ['@'], // logged-in users only
+                        'actions' => ['create', 'dashboard', 'delete-track', 'follow', 'unfollow'],
+                        'roles' => ['@'],
+                    ],
+                    [
+                        'allow' => true,
+                        'actions' => ['view'],
+                        'roles' => ['?', '@'],
                     ],
                 ],
             ],
-
-            // HTTP verb filters (must be a separate behavior)
             'verbs' => [
-                'class' => \yii\filters\VerbFilter::class,
+                'class' => VerbFilter::class,
                 'actions' => [
                     'delete-track' => ['post'],
+                    'follow' => ['post'],
+                    'unfollow' => ['post'],
+                    'followers' => ['get'],
+                    'following' => ['get'],
                 ],
             ],
         ];
     }
-
-
+    
     /**
-     * Create an Artist profile for the currently logged-in user.
+     * Create an Artist profile
      */
     public function actionCreate()
     {
         /** @var \common\models\User $user */
         $user = Yii::$app->user->identity;
 
-        // If the user already has an artist profile, redirect to dashboard
+       
         if ($user->artist) {
             return $this->redirect(['dashboard']);
         }
@@ -103,87 +109,129 @@ class ArtistController extends Controller
     }
 
     public function actionView($id)
-    {
-        $artist = Artist::find()
-            ->with([
-                'tracks',
-                'albums',
-                'avatarAsset', // important: avatar is stored via avatar_asset_id -> asset
-            ])
-            ->where(['id' => (int) $id])
-            ->one();
+{
+    $artist = Artist::find()
+        ->with([
+            'tracks',
+            'albums',
+            'avatarAsset',
+            'user', 
+        ])
+        ->where(['id' => (int)$id])
+        ->one();
 
-        if (!$artist) {
-            throw new NotFoundHttpException('Artist not found.');
+    if (!$artist) {
+        throw new NotFoundHttpException('Artist not found.');
+    }
+
+    // --- Playlists---
+    $playlists = [];
+    if ($artist->user_id) {
+        $plSchema = Yii::$app->db->getTableSchema('{{%playlist}}', true);
+        $ownerCol = null;
+
+        
+        foreach (['user_id', 'created_by_user_id', 'owner_id', 'created_by'] as $c) {
+            if ($plSchema && isset($plSchema->columns[$c])) { $ownerCol = $c; break; }
         }
 
-        return $this->render('view', [
-            'model' => $artist,
-        ]);
+        if ($ownerCol) {
+            $playlists = \common\models\Playlist::find()
+                ->where([$ownerCol => (int)$artist->user_id])
+                ->orderBy(['id' => SORT_DESC])
+                ->limit(12)
+                ->all();
+        }
     }
+
+    // --- Followers---
+    $followers = \common\models\User::find()
+        ->innerJoin('{{%follow}} f', 'f.follower_id = {{%user}}.id')
+        ->where(['f.artist_id' => (int)$artist->id])
+        ->orderBy(['{{%user}}.username' => SORT_ASC])
+        ->limit(24)
+        ->all();
+
+    // --- Following---
+    $followingArtists = [];
+    if ($artist->user_id) {
+        $followingArtists = Artist::find()
+            ->innerJoin('{{%follow}} f', 'f.artist_id = {{%artist}}.id')
+            ->where(['f.follower_id' => (int)$artist->user_id])
+            ->with(['avatarAsset', 'user'])
+            ->orderBy(['{{%artist}}.stage_name' => SORT_ASC])
+            ->limit(24)
+            ->all();
+    }
+
+    return $this->render('view', [
+        'model' => $artist,
+        'playlists' => $playlists,
+        'followers' => $followers,
+        'followingArtists' => $followingArtists,
+    ]);
+}
+
     /**
      * Follow an artist (AJAX).
      */
     public function actionFollow($id)
     {
         Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
-        if (Yii::$app->user->isGuest) {
-            return ['ok' => false, 'message' => 'Login required'];
+    
+        $artistId = (int)$id;
+        $userId = (int)Yii::$app->user->id;
+    
+        if (!$artistId || !Artist::find()->where(['id' => $artistId])->exists()) {
+            return ['ok' => false, 'message' => 'Artist not found'];
         }
-
-        $artistId = (int) $id;
-        $userId = (int) Yii::$app->user->id;
-
+    
         $exists = (new \yii\db\Query())
-            ->from('follow')
+            ->from('{{%follow}}')
             ->where(['follower_id' => $userId, 'artist_id' => $artistId])
             ->exists();
-
+    
         if (!$exists) {
-            Yii::$app->db->createCommand()->insert('follow', [
+            Yii::$app->db->createCommand()->insert('{{%follow}}', [
                 'follower_id' => $userId,
                 'artist_id' => $artistId,
                 'created_at' => new \yii\db\Expression('CURRENT_TIMESTAMP'),
             ])->execute();
         }
-
+    
         return ['ok' => true, 'following' => true];
     }
-
+    
     /**
      * Unfollow an artist (AJAX).
      */
     public function actionUnfollow($id)
-    {
-        Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+{
+    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
 
-        if (Yii::$app->user->isGuest) {
-            return ['ok' => false, 'message' => 'Login required'];
-        }
+    $artistId = (int)$id;
+    $userId = (int)Yii::$app->user->id;
 
-        $artistId = (int) $id;
-        $userId = (int) Yii::$app->user->id;
+    Yii::$app->db->createCommand()->delete('{{%follow}}', [
+        'follower_id' => $userId,
+        'artist_id' => $artistId,
+    ])->execute();
 
-        Yii::$app->db->createCommand()->delete('follow', [
-            'follower_id' => $userId,
-            'artist_id' => $artistId,
-        ])->execute();
+    return ['ok' => true, 'following' => false];
+}
 
-        return ['ok' => true, 'following' => false];
-    }
     public function actionDeleteTrack($id)
     {
         /** @var \common\models\User $user */
         $user = Yii::$app->user->identity;
 
-        // Make sure the user has an artist profile
+        
         $artist = $user->artist;
         if (!$artist) {
             throw new \yii\web\ForbiddenHttpException('You must be an artist to delete tracks.');
         }
 
-        // Find the track and ensure it belongs to the logged-in artist
+        
         $track = Track::find()
             ->where(['id' => (int) $id, 'artist_id' => $artist->id])
             ->andWhere(['deleted_at' => null])
@@ -221,4 +269,42 @@ class ArtistController extends Controller
 
 
     }
+    public function actionFollowers($id)
+{
+    $artist = Artist::findOne((int)$id);
+    if (!$artist) throw new NotFoundHttpException('Artist not found.');
+
+    $followers = \common\models\User::find()
+        ->innerJoin('{{%follow}} f', 'f.follower_id = {{%user}}.id')
+        ->where(['f.artist_id' => (int)$artist->id])
+        ->orderBy(['{{%user}}.username' => SORT_ASC])
+        ->all();
+
+    return $this->render('followers', [
+        'model' => $artist,
+        'followers' => $followers,
+    ]);
+}
+
+public function actionFollowing($id)
+{
+    $artist = Artist::findOne((int)$id);
+    if (!$artist) throw new NotFoundHttpException('Artist not found.');
+
+    $followingArtists = [];
+    if ($artist->user_id) {
+        $followingArtists = Artist::find()
+            ->innerJoin('{{%follow}} f', 'f.artist_id = {{%artist}}.id')
+            ->where(['f.follower_id' => (int)$artist->user_id])
+            ->with(['avatarAsset'])
+            ->orderBy(['{{%artist}}.stage_name' => SORT_ASC])
+            ->all();
+    }
+
+    return $this->render('following', [
+        'model' => $artist,
+        'followingArtists' => $followingArtists,
+    ]);
+}
+
 }

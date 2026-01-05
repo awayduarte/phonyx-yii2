@@ -4,6 +4,7 @@ use yii\helpers\Url;
 
 /** @var \common\models\Playlist[] $myPlaylists */
 /** @var \common\models\Playlist[] $suggestedPlaylists */
+/** @var \common\models\Playlist[] $likedPlaylists */
 /** @var int|null $userId */
 
 $this->title = 'Playlists';
@@ -21,50 +22,88 @@ $resolveCover = function($playlist) use ($defaultCover) {
 
     $path = (string)$asset->path;
 
-    // se já for URL absoluta
     if (preg_match('~^https?://~i', $path)) return $path;
-
-    // normaliza para começar com /
     if ($path !== '' && $path[0] !== '/') $path = '/' . $path;
 
-    // garante URL absoluta no frontend
     return Url::to('@web' . $path, true);
 };
+
+// Helper: playlist is liked by me?
+$likedIds = [];
+if (!empty($likedPlaylists)) {
+    foreach ($likedPlaylists as $lp) $likedIds[(int)$lp->id] = true;
+}
+
+$csrfParam = Yii::$app->request->csrfParam;
+$csrfToken = Yii::$app->request->getCsrfToken();
 ?>
 
-<div class="container py-4 playlists-discover">
+<div class="container py-4 playlist-discover">
 
-  <div class="d-flex align-items-center justify-content-between mb-4">
+  <div class="pd-header">
     <div>
-      <h1 class="mb-0">Playlists</h1>
-      <div class="text-muted">Explora e gere as tuas playlists</div>
+      <h1 class="pd-title">Playlists</h1>
+      <p class="pd-sub">Explora e gere as tuas playlists</p>
     </div>
 
     <?php if (!empty($userId)): ?>
-      <a class="btn btn-primary" href="<?= Url::to(['playlist/create']) ?>">Criar playlist</a>
+      <a class="pd-btn" href="<?= Url::to(['playlist/create']) ?>">Criar playlist</a>
     <?php else: ?>
-      <a class="btn btn-outline-primary" href="<?= Url::to(['site/login']) ?>">Entrar para criar</a>
+      <a class="pd-btn" style="background:transparent;border:1px solid rgba(255,255,255,.18)" href="<?= Url::to(['site/login']) ?>">
+        Entrar para criar
+      </a>
     <?php endif; ?>
   </div>
 
-  <section class="mb-5">
-    <h3 class="mb-3">As tuas playlists</h3>
+  <!-- LIKED PLAYLISTS -->
+  <?php if (!empty($userId)): ?>
+    <section class="pd-section">
+      <div class="pd-section-head">
+        <h2 class="pd-h2">Playlists que curtiste</h2>
+      </div>
+
+      <?php if (empty($likedPlaylists)): ?>
+        <div class="pd-empty">Ainda não curtiste playlists.</div>
+      <?php else: ?>
+        <div class="pd-grid">
+          <?php foreach ($likedPlaylists as $pl): ?>
+            <?php $coverUrl = $resolveCover($pl); ?>
+            <a class="pd-card" href="<?= Url::to(['playlist/view', 'id' => $pl->id]) ?>">
+              <div class="pd-cover">
+                <img src="<?= Html::encode($coverUrl) ?>?v=<?= (int)$pl->cover_asset_id ?: time() ?>" alt="Capa">
+              </div>
+              <div class="pd-meta">
+                <p class="pd-name"><?= Html::encode($pl->title ?: 'Untitled') ?></p>
+                <div class="pd-type">Liked</div>
+              </div>
+            </a>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </section>
+  <?php endif; ?>
+
+  <!-- MY PLAYLISTS -->
+  <section class="pd-section">
+    <div class="pd-section-head">
+      <h2 class="pd-h2">As tuas playlists</h2>
+    </div>
 
     <?php if (empty($userId)): ?>
-      <div class="alert alert-info">Faz login para veres e criares as tuas playlists.</div>
+      <div class="pd-empty">Faz login para veres e criares as tuas playlists.</div>
     <?php elseif (empty($myPlaylists)): ?>
-      <div class="alert alert-secondary">Ainda não tens playlists.</div>
+      <div class="pd-empty">Ainda não tens playlists.</div>
     <?php else: ?>
-      <div class="playlist-grid">
+      <div class="pd-grid">
         <?php foreach ($myPlaylists as $pl): ?>
           <?php $coverUrl = $resolveCover($pl); ?>
-          <a class="playlist-card" href="<?= Url::to(['playlist/view', 'id' => $pl->id]) ?>">
-            <div class="playlist-cover">
+          <a class="pd-card" href="<?= Url::to(['playlist/view', 'id' => $pl->id]) ?>">
+            <div class="pd-cover">
               <img src="<?= Html::encode($coverUrl) ?>?v=<?= (int)$pl->cover_asset_id ?: time() ?>" alt="Capa">
             </div>
-            <div class="playlist-info">
-              <div class="playlist-title"><?= Html::encode($pl->title) ?></div>
-              <div class="playlist-sub">Playlist</div>
+            <div class="pd-meta">
+              <p class="pd-name"><?= Html::encode($pl->title ?: 'Untitled') ?></p>
+              <div class="pd-type">Playlist</div>
             </div>
           </a>
         <?php endforeach; ?>
@@ -72,27 +111,78 @@ $resolveCover = function($playlist) use ($defaultCover) {
     <?php endif; ?>
   </section>
 
-  <section>
-    <h3 class="mb-3">Sugestões para ouvir</h3>
+  <!-- SUGGESTED -->
+  <section class="pd-section">
+    <div class="pd-section-head">
+      <h2 class="pd-h2">Sugestões para ouvir</h2>
+    </div>
 
     <?php if (empty($suggestedPlaylists)): ?>
-      <div class="alert alert-secondary">Ainda não existem playlists sugeridas.</div>
+      <div class="pd-empty">Ainda não existem playlists sugeridas.</div>
     <?php else: ?>
-      <div class="playlist-grid">
+      <div class="pd-grid">
         <?php foreach ($suggestedPlaylists as $pl): ?>
-          <?php $coverUrl = $resolveCover($pl); ?>
-          <a class="playlist-card" href="<?= Url::to(['playlist/view', 'id' => $pl->id]) ?>">
-            <div class="playlist-cover">
-              <img src="<?= Html::encode($coverUrl) ?>?v=<?= (int)$pl->cover_asset_id ?: time() ?>" alt="Capa">
-            </div>
-            <div class="playlist-info">
-              <div class="playlist-title"><?= Html::encode($pl->title) ?></div>
-              <div class="playlist-sub">Sugestão</div>
-            </div>
-          </a>
+          <?php
+            $coverUrl = $resolveCover($pl);
+            $isLiked = !empty($likedIds[(int)$pl->id]);
+          ?>
+          <div style="position:relative">
+            <a class="pd-card" href="<?= Url::to(['playlist/view', 'id' => $pl->id]) ?>">
+              <div class="pd-cover">
+                <img src="<?= Html::encode($coverUrl) ?>?v=<?= (int)$pl->cover_asset_id ?: time() ?>" alt="Capa">
+              </div>
+              <div class="pd-meta">
+                <p class="pd-name"><?= Html::encode($pl->title ?: 'Untitled') ?></p>
+                <div class="pd-type">Sugestão</div>
+              </div>
+            </a>
+          </div>
         <?php endforeach; ?>
       </div>
     <?php endif; ?>
   </section>
 
 </div>
+
+<?php
+$this->registerJs(<<<JS
+(function(){
+  const csrfParam = {$this->renderDynamic('return json_encode(Yii::$app->request->csrfParam);')};
+  const csrfToken = {$this->renderDynamic('return json_encode(Yii::$app->request->csrfToken);')};
+
+  async function post(url){
+    const body = new URLSearchParams();
+    body.append(csrfParam, csrfToken);
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+      },
+      body: body.toString()
+    });
+
+    const txt = await res.text();
+    try { return { ok: res.ok, data: JSON.parse(txt) }; }
+    catch(e){ console.log('RAW:', txt); return { ok: false, data: null }; }
+  }
+
+  document.addEventListener('click', async (e) => {
+    const btn = e.target.closest('.pl-like-btn');
+    if (!btn) return;
+
+    const liked = btn.dataset.liked === '1';
+    const url = liked ? btn.dataset.unlikeUrl : btn.dataset.likeUrl;
+
+    const r = await post(url);
+    if (!r.ok || !r.data || !r.data.ok) return;
+
+    btn.dataset.liked = r.data.liked ? '1' : '0';
+    btn.classList.toggle('is-liked', !!r.data.liked);
+    btn.textContent = r.data.liked ? '♥' : '♡';
+
+  });
+})();
+JS);
+?>
