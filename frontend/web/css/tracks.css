@@ -315,3 +315,12 @@
   border-color: rgba(255,180,60,.35);
   background: rgba(255,180,60,.08);
 }
+
+
+.track-extra-card h2{
+  color: white;
+}
+
+.track-main-info{
+  color: white;
+}

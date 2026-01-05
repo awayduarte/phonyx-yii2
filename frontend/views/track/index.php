@@ -1,10 +1,12 @@
 <?php
 /** @var yii\web\View $this */
 /** @var \common\models\Genre[] $genres */
-/** @var array $tracksByGenre */
+/** @var \common\models\Genre|null $selectedGenre */
+/** @var \yii\data\ActiveDataProvider|null $dataProvider */
 
 use yii\helpers\Html;
 use yii\helpers\Url;
+use yii\widgets\LinkPager;
 
 $this->title = 'Tracks | PHONYX';
 
@@ -22,13 +24,44 @@ $this->registerCssFile(
         <p class="tracks-subtitle">Explora as músicas da PHONYX por género.</p>
     </header>
 
-    <?php foreach ($genres as $genre): ?>
-        <?php $tracks = $tracksByGenre[$genre->id] ?? []; ?>
+    <?php if (empty($genres)): ?>
+        <p class="tracks-empty">Ainda não existem géneros.</p>
+    <?php else: ?>
+
+        <!-- Genre tabs -->
+        <nav class="tracks-genres-nav" style="margin-bottom:16px;">
+            <div class="tracks-genres-row" style="display:flex; gap:10px; flex-wrap:wrap;">
+                <?php foreach ($genres as $g): ?>
+                    <?php
+                        $isActive = $selectedGenre && ((int)$selectedGenre->id === (int)$g->id);
+                        $url = Url::to(['track/index', 'genre' => (int)$g->id, 'p' => 1]);
+                    ?>
+                    <a href="<?= $url ?>"
+                       class="tracks-genre-chip <?= $isActive ? 'is-active' : '' ?>"
+                       style="
+                        padding:10px 14px;
+                        border-radius:999px;
+                        background: <?= $isActive ? 'rgba(255,165,51,0.16)' : 'rgba(255,255,255,0.06)' ?>;
+                        color: <?= $isActive ? '#ffa533' : 'rgba(255,255,255,0.85)' ?>;
+                        border: 1px solid <?= $isActive ? 'rgba(255,165,51,0.35)' : 'rgba(255,255,255,0.08)' ?>;
+                        text-decoration:none;
+                       ">
+                        <?= Html::encode($g->name) ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </nav>
+
+        <?php
+            $tracks = $dataProvider ? $dataProvider->getModels() : [];
+        ?>
 
         <section class="tracks-genre-block">
             <!-- Genre header -->
             <div class="tracks-genre-header">
-                <h2 class="tracks-genre-name"><?= Html::encode($genre->name) ?></h2>
+                <h2 class="tracks-genre-name">
+                    <?= Html::encode($selectedGenre ? $selectedGenre->name : 'Género') ?>
+                </h2>
             </div>
 
             <?php if (empty($tracks)): ?>
@@ -40,27 +73,27 @@ $this->registerCssFile(
                         // Track URLs
                         $trackUrl = Url::to(['track/view', 'id' => $track->id]);
 
-                        // Cover (default for now)
+                        // Cover 
                         $coverUrl = Yii::getAlias('@web') . '/img/default-cover.png';
 
-                        // Artist name (via relation)
+                        // Artist name 
                         $artistName = $track->artist
                             ? ($track->artist->artist_name ?? $track->artist->stage_name ?? 'Unknown artist')
                             : 'Unknown artist';
 
-                        // Audio URL (via asset relation)
+                        // Audio URL
                         $audioUrl = null;
                         if ($track->audioAsset && !empty($track->audioAsset->path)) {
                             $path = $track->audioAsset->path;
                             $audioUrl = (strpos($path, 'http') === 0) ? $path : (Yii::getAlias('@web') . $path);
                         }
 
-                        // Duration (optional)
+                      
                         $duration = $track->duration ?? null;
                         ?>
 
                         <article class="tracks-item">
-                            <!-- Left: cover + text -->
+                            <!-- Left-->
                             <a class="tracks-cover" href="<?= $trackUrl ?>">
                                 <img src="<?= Html::encode($coverUrl) ?>" alt="">
                             </a>
@@ -72,7 +105,7 @@ $this->registerCssFile(
                                 <div class="tracks-artist"><?= Html::encode($artistName) ?></div>
                             </div>
 
-                            <!-- Right: meta + actions -->
+                            <!-- Right -->
                             <div class="tracks-actions">
                                 <?php if (!empty($duration)): ?>
                                     <span class="tracks-duration"><?= Html::encode($duration) ?></span>
@@ -85,9 +118,11 @@ $this->registerCssFile(
 
                                 <?php if ($audioUrl): ?>
                                     <button class="tracks-btn tracks-btn--play track-play-btn" type="button"
-                                        data-id="<?= (int) $track->id ?>" data-audio="<?= Html::encode($audioUrl) ?>"
+                                        data-id="<?= (int) $track->id ?>"
+                                        data-audio="<?= Html::encode($audioUrl) ?>"
                                         data-title="<?= Html::encode($track->title ?? '') ?>"
-                                        data-artist="<?= Html::encode($artistName) ?>" data-cover="<?= Html::encode($coverUrl) ?>">
+                                        data-artist="<?= Html::encode($artistName) ?>"
+                                        data-cover="<?= Html::encode($coverUrl) ?>">
                                         ▶
                                     </button>
                                 <?php else: ?>
@@ -98,11 +133,29 @@ $this->registerCssFile(
 
                     <?php endforeach; ?>
                 </div>
+
+                <!-- Pager -->
+                <div class="tracks-pager" style="margin-top:18px; display:flex; justify-content:center;">
+                    <?= LinkPager::widget([
+                        'pagination' => $dataProvider->pagination,
+                        'maxButtonCount' => 7,
+                        'options' => ['class' => 'pagination'],
+                        'linkOptions' => ['class' => 'page-link'],
+                        'pageCssClass' => 'page-item',
+                        'activePageCssClass' => 'active',
+                        'disabledPageCssClass' => 'disabled',
+                        'prevPageLabel' => '‹',
+                        'nextPageLabel' => '›',
+                    ]) ?>
+                </div>
+
             <?php endif; ?>
         </section>
-    <?php endforeach; ?>
+
+    <?php endif; ?>
 
 </div>
+
 <?php
 $myPlaylistsUrl = Url::to(['playlist/my-playlists']);
 $addTrackUrl = Url::to(['playlist/add-track']);
@@ -144,10 +197,9 @@ $this->registerJs(<<<JS
     const r = btn.getBoundingClientRect();
     const gap = 8;
 
-    // fixed so it doesn't break inside overflow containers
     menu.style.position = 'fixed';
     menu.style.top = (r.bottom + gap) + 'px';
-    menu.style.left = Math.min(r.left, window.innerWidth - 340) + 'px'; // keep inside screen
+    menu.style.left = Math.min(r.left, window.innerWidth - 340) + 'px';
     menu.style.width = Math.max(260, Math.min(320, r.width + 120)) + 'px';
     menu.style.zIndex = 9999;
   }
@@ -242,7 +294,6 @@ $this->registerJs(<<<JS
   document.addEventListener('click', async function (e) {
     const btn = e.target.closest('.add-to-playlist-btn');
 
-    // close when clicking outside
     if (!btn) {
       if (openMenuEl && !e.target.closest('.pl-dd')) closeMenu();
       return;
@@ -251,7 +302,6 @@ $this->registerJs(<<<JS
     const trackId = parseInt(btn.dataset.trackId || '0', 10);
     if (!trackId) return;
 
-    // toggle
     if (openBtnEl === btn) {
       closeMenu();
       return;
@@ -276,11 +326,8 @@ $this->registerJs(<<<JS
     if (openBtnEl && openMenuEl) positionMenu(openBtnEl, openMenuEl);
   }, true);
 })();
-
 JS);
 
-?>
-<?php
 $this->registerJs(<<<JS
 (function(){
   document.addEventListener('click', function(e){
@@ -298,7 +345,6 @@ $this->registerJs(<<<JS
 
     if (typeof window.phonyxSetTrack !== 'function') {
       console.log('[PLAY] window.phonyxSetTrack não existe');
-      // fallback rápido só para testar áudio
       try {
         if (!window.__testAudio) window.__testAudio = new Audio();
         window.__testAudio.src = src;
