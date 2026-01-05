@@ -13,13 +13,13 @@ use getID3;
  */
 class Track extends ActiveRecord
 {
-    /** @var UploadedFile audio upload (temporary, not stored in DB) */
+    /** @var UploadedFile  */
     public $audioFile;
 
-    /** @var UploadedFile cover upload (optional, temporary) */
+    /** @var UploadedFile  */
     public $coverFile;
 
-    /** @var int[] featured artist ids */
+    /** @var int[] */
     public $featuredArtistIds = [];
 
     public static function tableName()
@@ -33,8 +33,8 @@ class Track extends ActiveRecord
             // required fields
             [['artist_id', 'title'], 'required'],
 
-            // integers (nullable)
-            [['artist_id', 'album_id', 'audio_asset_id', 'duration', 'genre_id'], 'integer'],
+            // integers 
+            [['artist_id', 'album_id', 'audio_asset_id', 'cover_asset_id', 'duration', 'genre_id'], 'integer'],
 
             // strings
             [['title'], 'string', 'max' => 255],
@@ -63,7 +63,7 @@ class Track extends ActiveRecord
                 'rule' => ['integer'],
             ],
 
-            // foreign keys (IMPORTANT: skipOnEmpty = true)
+            // foreign keys 
             [
                 ['album_id'],
                 'exist',
@@ -92,6 +92,14 @@ class Track extends ActiveRecord
                 'targetClass' => Asset::class,
                 'targetAttribute' => ['audio_asset_id' => 'id'],
             ],
+            [
+                ['cover_asset_id'],
+                'exist',
+                'skipOnError' => true,
+                'targetClass' => Asset::class,
+                'targetAttribute' => ['cover_asset_id' => 'id'],
+            ],
+            
         ];
     }
 
@@ -234,4 +242,77 @@ class Track extends ActiveRecord
         $this->deleted_at = null;
         return $this->save(false, ['deleted_at']);
     }
+
+    /* ========================
+     * Computed properties (getters)
+     * ======================== */
+
+    public function getCoverUrl(): string
+    {
+        $default = \yii\helpers\Url::to('@web/img/default-cover.png', true);
+
+       
+        if (!property_exists($this, 'cover_asset_id') || empty($this->cover_asset_id)) {
+            return $default;
+        }
+
+        $asset = Asset::findOne((int) $this->cover_asset_id);
+        if (!$asset || empty($asset->path)) {
+            return $default;
+        }
+
+        $path = (string) $asset->path;
+
+        
+        if (preg_match('~^https?://~i', $path)) {
+            return $path;
+        }
+
+       
+        $path = ltrim($path, '/');
+
+        return \yii\helpers\Url::to('@web/' . $path, true);
+    }
+
+    public function getAudioUrl(): ?string
+    {
+        if (!$this->audioAsset || empty($this->audioAsset->path)) {
+            return null;
+        }
+
+        $path = (string) $this->audioAsset->path;
+
+        if (preg_match('~^https?://~i', $path)) {
+            return $path;
+        }
+
+        $path = ltrim($path, '/');
+
+        return \yii\helpers\Url::to('@web/' . $path, true);
+    }
+
+    public function getDurationLabel(): string
+    {
+        $seconds = (int) ($this->duration ?? 0);
+        if ($seconds <= 0) {
+            return '--:--';
+        }
+
+        $m = intdiv($seconds, 60);
+        $s = $seconds % 60;
+
+        return sprintf('%d:%02d', $m, $s);
+    }
+
+    public function getArtistLabel(): string
+    {
+        return isset($this->artist) && !empty($this->artist->stage_name) ? $this->artist->stage_name : 'Unknown artist';
+    }
+
+    public function getLikesCount(): int
+    {
+        
+        return (int) $this->getLikes()->count();
+    }
+
 }

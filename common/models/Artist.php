@@ -98,9 +98,9 @@ class Artist extends ActiveRecord
 
     // artist -> avatar image
     public function getAvatarAsset()
-{
-    return $this->hasOne(\common\models\Asset::class, ['id' => 'avatar_asset_id']);
-}
+    {
+        return $this->hasOne(\common\models\Asset::class, ['id' => 'avatar_asset_id']);
+    }
 
 
     // artist -> followers
@@ -120,6 +120,10 @@ class Artist extends ActiveRecord
     public function getTracks()
     {
         return $this->hasMany(Track::class, ['artist_id' => 'id']);
+    }
+    public function getArtist_name()
+    {
+        return $this->stage_name;
     }
 
 
