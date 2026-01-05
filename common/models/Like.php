@@ -55,4 +55,6 @@ class Like extends \yii\db\ActiveRecord
     {
         return new LikeQuery(get_called_class());
     }
+
+
 }
