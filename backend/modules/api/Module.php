@@ -2,23 +2,26 @@
 
 namespace backend\modules\api;
 
+use Yii;
+use yii\web\Response;
+
 /**
  * api module definition class
  */
+
 class Module extends \yii\base\Module
 {
-    /**
-     * {@inheritdoc}
-     */
     public $controllerNamespace = 'backend\modules\api\controllers';
 
-    /**
-     * {@inheritdoc}
-     */
     public function init()
     {
         parent::init();
+
+       
         \Yii::$app->user->enableSession = false;
-        // custom initialization code goes here
+        \Yii::$app->user->loginUrl = null;
+        
+        
+        Yii::$app->response->format = Response::FORMAT_JSON;
     }
 }
