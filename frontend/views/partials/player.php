@@ -2,17 +2,20 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-// rota para guardar “gosto”
+// Like route
 $toggleLikeUrl = Url::to(['playlist/toggle-like']);
 $csrf          = Yii::$app->request->csrfToken;
+$isGuest       = Yii::$app->user->isGuest ? '1' : '0';
 
-// faixa default (home)
+// Default track (home)
 $defaultSrc    = Yii::getAlias('@web/media/disstrack-albert.mp3');
 $defaultTitle  = 'Disstrack Albert';
 $defaultArtist = 'Phonyx · Single';
 ?>
 
-<section class="player-shell" id="player-shell" data-track-id=""
+<section class="player-shell" id="player-shell"
+         data-track-id=""
+         data-is-guest="<?= Html::encode($isGuest) ?>"
          data-default-src="<?= Html::encode($defaultSrc) ?>"
          data-default-title="<?= Html::encode($defaultTitle) ?>"
          data-default-artist="<?= Html::encode($defaultArtist) ?>">
@@ -51,7 +54,7 @@ $defaultArtist = 'Phonyx · Single';
             <button type="button"
                     id="player-like-btn"
                     class="player-like-btn"
-                    title="Adicionar aos gostos">
+                    title="Add to likes">
                 ♡
             </button>
 
@@ -68,31 +71,42 @@ $defaultArtist = 'Phonyx · Single';
 <?php
 $this->registerJs(<<<JS
 (function () {
-  const audio        = document.getElementById('phonyx-audio');
-  const shell        = document.getElementById('player-shell');
+  const audio         = document.getElementById('phonyx-audio');
+  const shell         = document.getElementById('player-shell');
   if (!audio || !shell) return;
 
-  const playBtn      = document.getElementById('player-play');
-  const playIcon     = document.getElementById('player-play-icon');
-  const progressBar  = document.getElementById('player-progress-bar');
-  const progressFill = document.getElementById('player-progress-fill');
-  const currentTimeEl= document.getElementById('player-current-time');
-  const durationEl   = document.getElementById('player-duration');
-  const volumeSlider = document.getElementById('player-volume');
-  const toggleBtn    = document.getElementById('player-toggle');
-  const likeBtn      = document.getElementById('player-like-btn');
+  const playBtn       = document.getElementById('player-play');
+  const playIcon      = document.getElementById('player-play-icon');
+  const progressBar   = document.getElementById('player-progress-bar');
+  const progressFill  = document.getElementById('player-progress-fill');
+  const currentTimeEl = document.getElementById('player-current-time');
+  const durationEl    = document.getElementById('player-duration');
+  const volumeSlider  = document.getElementById('player-volume');
+  const toggleBtn     = document.getElementById('player-toggle');
+  const likeBtn       = document.getElementById('player-like-btn');
+  const prevBtn       = document.getElementById('player-prev');
+  const nextBtn       = document.getElementById('player-next');
 
-  const titleEl      = shell.querySelector('.player-title');
-  const artistEl     = shell.querySelector('.player-artist');
-  const coverEl      = shell.querySelector('.player-cover');
+  const titleEl       = shell.querySelector('.player-title');
+  const artistEl      = shell.querySelector('.player-artist');
+  const coverEl       = shell.querySelector('.player-cover');
 
-  const csrfToken    = '$csrf';
-  const toggleLikeUrl= '$toggleLikeUrl';
+  const csrfToken     = '$csrf';
+  const toggleLikeUrl = '$toggleLikeUrl';
+  const isGuest       = shell.dataset.isGuest === '1';
+
+  // Global player state
+  window.phonyxPlayer = window.phonyxPlayer || {};
+  const P = window.phonyxPlayer;
+  P.audio = audio;
+  P.queue = Array.isArray(P.queue) ? P.queue : [];
+  P.queueIndex = typeof P.queueIndex === 'number' ? P.queueIndex : -1;
+  P.currentId = P.currentId || '';
 
   function formatTime(sec) {
     if (!sec || isNaN(sec)) return '0:00';
     const minutes = Math.floor(sec / 60);
-    const seconds = Math.floor(sec % 60).toString().padStart(2,'0');
+    const seconds = Math.floor(sec % 60).toString().padStart(2, '0');
     return minutes + ':' + seconds;
   }
 
@@ -101,7 +115,17 @@ $this->registerJs(<<<JS
     playIcon.textContent = audio.paused ? '▶' : '❚❚';
   }
 
-  // ====== EVENTOS DO AUDIO ======
+  function setLikeState(isLiked) {
+    if (!likeBtn) return;
+    likeBtn.classList.toggle('is-liked', !!isLiked);
+    likeBtn.textContent = isLiked ? '♥' : '♡';
+  }
+
+  function dispatch(name) {
+    try { window.dispatchEvent(new CustomEvent(name)); } catch(e) {}
+  }
+
+  // ====== AUDIO EVENTS ======
   audio.addEventListener('loadedmetadata', function () {
     if (durationEl) durationEl.textContent = formatTime(audio.duration);
   });
@@ -114,26 +138,38 @@ $this->registerJs(<<<JS
     }
   });
 
-  audio.addEventListener('play', updatePlayIcon);
-  audio.addEventListener('pause', updatePlayIcon);
+  audio.addEventListener('play', function () {
+    updatePlayIcon();
+    dispatch('phonyx:play');
+  });
 
-  // ====== CONTROLOS ======
+  audio.addEventListener('pause', function () {
+    updatePlayIcon();
+    dispatch('phonyx:pause');
+  });
+
+  // Auto-next on end
+  audio.addEventListener('ended', function () {
+    if (typeof window.phonyxNext === 'function') {
+      const ok = window.phonyxNext();
+      if (!ok) audio.pause();
+    }
+  });
+
+  // ====== CONTROLS ======
   if (playBtn) {
     playBtn.addEventListener('click', function () {
       if (!audio.src) return;
-      if (audio.paused) {
-        audio.play().catch(console.error);
-      } else {
-        audio.pause();
-      }
+      if (audio.paused) audio.play().catch(console.error);
+      else audio.pause();
     });
   }
 
   if (progressBar) {
     progressBar.addEventListener('click', function (e) {
       if (!audio.duration) return;
-      const rect    = progressBar.getBoundingClientRect();
-      const clickX  = e.clientX - rect.left;
+      const rect = progressBar.getBoundingClientRect();
+      const clickX = e.clientX - rect.left;
       const percent = clickX / rect.width;
       audio.currentTime = audio.duration * percent;
     });
@@ -153,69 +189,108 @@ $this->registerJs(<<<JS
     });
   }
 
-  // ====== GOSTOS ======
-  function setLikeState(isLiked) {
-    if (!likeBtn) return;
-    if (isLiked) {
-      likeBtn.classList.add('is-liked');
-      likeBtn.textContent = '♥';
-    } else {
-      likeBtn.classList.remove('is-liked');
-      likeBtn.textContent = '♡';
-    }
-  }
+  // Prev/Next buttons
+  if (prevBtn) prevBtn.addEventListener('click', function () {
+    if (typeof window.phonyxPrev === 'function') window.phonyxPrev();
+  });
 
+  if (nextBtn) nextBtn.addEventListener('click', function () {
+    if (typeof window.phonyxNext === 'function') window.phonyxNext();
+  });
+
+  // ====== QUEUE API ======
+  window.phonyxSetQueue = function (tracks, startId) {
+    P.queue = Array.isArray(tracks) ? tracks.filter(t => t && t.src) : [];
+    P.queueIndex = -1;
+
+    if (P.queue.length) {
+      if (startId) {
+        const idx = P.queue.findIndex(t => String(t.id) === String(startId));
+        P.queueIndex = idx >= 0 ? idx : 0;
+      } else {
+        P.queueIndex = 0;
+      }
+    }
+  };
+
+  window.phonyxNext = function () {
+    if (!P.queue || !P.queue.length) return false;
+    if (P.queueIndex < 0) P.queueIndex = 0;
+    P.queueIndex = (P.queueIndex + 1) % P.queue.length;
+
+    const t = P.queue[P.queueIndex];
+    if (!t) return false;
+
+    window.phonyxSetTrack({ ...t, autoplay: true });
+    return true;
+  };
+
+  window.phonyxPrev = function () {
+    if (P.audio && P.audio.currentTime > 3) {
+      P.audio.currentTime = 0;
+      return true;
+    }
+
+    if (!P.queue || !P.queue.length) return false;
+    if (P.queueIndex < 0) P.queueIndex = 0;
+    P.queueIndex = (P.queueIndex - 1 + P.queue.length) % P.queue.length;
+
+    const t = P.queue[P.queueIndex];
+    if (!t) return false;
+
+    window.phonyxSetTrack({ ...t, autoplay: true });
+    return true;
+  };
+
+  // Optional helper: toggle play only if same track
+  window.phonyxTogglePlay = function (trackId) {
+    const currentId = String(P.currentId || '');
+    const wantId = String(trackId || '');
+    if (!currentId || !wantId || currentId !== wantId) return false;
+
+    if (audio.paused) audio.play().catch(console.error);
+    else audio.pause();
+    return true;
+  };
+
+  // ====== LIKES ======
   if (likeBtn) {
     likeBtn.addEventListener('click', function () {
       const trackId = shell.dataset.trackId;
-      if (!trackId) {
-        console.warn('Nenhuma faixa ativa no player.');
+      if (!trackId) return;
+
+      if (isGuest) {
+        alert('You need to login to like tracks.');
         return;
       }
 
       fetch(toggleLikeUrl, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        },
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
         body: 'track_id=' + encodeURIComponent(trackId) + '&_csrf=' + encodeURIComponent(csrfToken)
       })
-      .then(function (resp) { return resp.json(); })
-      .then(function (data) {
-        if (!data.success) {
-          console.error(data.message || 'Erro ao guardar gosto.');
-          return;
-        }
-        if (data.state === 'added') {
-          setLikeState(true);
-        } else if (data.state === 'removed') {
-          setLikeState(false);
-        }
+      .then(r => r.json())
+      .then(data => {
+        if (!data || !data.success) return;
+        setLikeState(data.state === 'added');
       })
       .catch(console.error);
     });
   }
 
-  // ====== FUNÇÃO GLOBAL PARA OUTRAS PÁGINAS ======
+  // ====== GLOBAL SET TRACK ======
   window.phonyxSetTrack = function (opts) {
     if (!opts || !opts.src) return;
 
     audio.src = opts.src;
     audio.currentTime = 0;
 
-   
-    if (opts.autoplay === false) {
-      audio.pause();
-    } else {
-      audio.play().catch(console.error);
-    }
+    if (opts.autoplay === false) audio.pause();
+    else audio.play().catch(console.error);
 
-    if (titleEl && opts.title) {
-      titleEl.textContent = opts.title;
-    }
-    if (artistEl && opts.artist) {
-      artistEl.textContent = opts.artist;
-    }
+    if (titleEl) titleEl.textContent = (opts.title || '');
+    if (artistEl) artistEl.textContent = (opts.artist || '');
+
     if (coverEl) {
       if (opts.cover) {
         coverEl.style.backgroundImage    = 'url(' + opts.cover + ')';
@@ -227,17 +302,30 @@ $this->registerJs(<<<JS
       }
     }
 
-    var tid = (typeof opts.trackId !== 'undefined' && opts.trackId !== null && opts.trackId !== '')
-              ? opts.trackId
-              : (opts.id || '');
+    // Track id
+    const tid = (opts.trackId !== undefined && opts.trackId !== null && String(opts.trackId) !== '')
+      ? String(opts.trackId)
+      : String(opts.id || '');
 
     shell.dataset.trackId = tid;
+    P.currentId = tid;
 
+    // Sync queueIndex if exists
+    if (P.queue && P.queue.length && tid) {
+      const idx = P.queue.findIndex(t => String(t.id) === tid);
+      if (idx >= 0) P.queueIndex = idx;
+    }
+
+    // Like state
     setLikeState(!!opts.isLiked);
+
     shell.classList.remove('collapsed');
+    updatePlayIcon();
+
+    dispatch('phonyx:trackchange');
   };
 
-  // ====== FAIXA DEFAULT AO CARREGAR A PÁGINA ======
+  // ====== DEFAULT TRACK ON LOAD ======
   const defSrc    = shell.dataset.defaultSrc;
   const defTitle  = shell.dataset.defaultTitle;
   const defArtist = shell.dataset.defaultArtist;
@@ -250,7 +338,7 @@ $this->registerJs(<<<JS
       cover: '',
       trackId: '',
       isLiked: false,
-      autoplay: false    
+      autoplay: false
     });
   }
 })();

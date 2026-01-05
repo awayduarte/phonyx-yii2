@@ -31,10 +31,13 @@ AppAsset::register($this);
     $this->registerCssFile('@web/css/artist.css', ['depends' => [\yii\web\YiiAsset::class]]);
     $this->registerCssFile('@web/css/artist-dashboard.css', ['depends' => [\yii\web\YiiAsset::class]]);
     
+    
 
     ?>
+    <?= Html::csrfMetaTags() ?>
+
 </head>
-<body>
+<body class="<?= $this->params['bodyClass'] ?? '' ?>">
 <?php $this->beginBody() ?>
 <div class="wrap">
     <?= $this->render('//partials/navbar') ?>
