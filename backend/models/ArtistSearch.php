@@ -6,72 +6,66 @@ use yii\base\Model;
 use yii\data\ActiveDataProvider;
 use common\models\Artist;
 
-/**
- * ArtistSearch represents the model behind the search form of `common\models\Artist`.
- */
 class ArtistSearch extends Artist
 {
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
         return [
             [['id', 'user_id', 'avatar_asset_id'], 'integer'],
-            [['stage_name', 'bio', 'created_at', 'updated_at', 'deleted_at'], 'safe'],
+            [['stage_name', 'bio', 'created_at', 'updated_at'], 'safe'],
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function scenarios()
     {
-        // bypass scenarios() implementation in the parent class
         return Model::scenarios();
     }
 
-    /**
-     * Creates data provider instance with search query applied
-     *
-     * @param array $params
-     * @param string|null $formName Form name to be used into `->load()` method.
-     *
-     * @return ActiveDataProvider
-     */
     public function search($params, $formName = null)
     {
-        $query = Artist::find();
-
-        // add conditions that should always apply here
+        $query = Artist::find()
+            ->alias('artist')
+            ->joinWith(['user u'])
+            ->where(['artist.deleted_at' => null]);
 
         $dataProvider = new ActiveDataProvider([
             'query' => $query,
             'pagination' => [
                 'pageSize' => 10,
             ],
+            'sort' => [
+                'defaultOrder' => ['id' => SORT_ASC],
+                'attributes' => [
+                    'id',
+                    'stage_name',
+                    'created_at',
+                    'updated_at',
+
+                    'user.username' => [
+                        'asc'  => ['u.username' => SORT_ASC],
+                        'desc' => ['u.username' => SORT_DESC],
+                    ],
+                ],
+            ],
         ]);
 
         $this->load($params, $formName);
 
         if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
-            // $query->where('0=1');
             return $dataProvider;
         }
 
-        // grid filtering conditions
         $query->andFilterWhere([
-            'id' => $this->id,
-            'user_id' => $this->user_id,
-            'avatar_asset_id' => $this->avatar_asset_id,
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
-            'deleted_at' => $this->deleted_at,
+            'artist.id' => $this->id,
+            'artist.user_id' => $this->user_id,
+            'artist.avatar_asset_id' => $this->avatar_asset_id,
+            'artist.created_at' => $this->created_at,
+            'artist.updated_at' => $this->updated_at,
         ]);
 
-        $query->andFilterWhere(['like', 'stage_name', $this->stage_name])
-            ->andFilterWhere(['like', 'bio', $this->bio]);
+        $query->andFilterWhere(['like', 'artist.stage_name', $this->stage_name])
+            ->andFilterWhere(['like', 'artist.bio', $this->bio])
+            ->andFilterWhere(['like', 'u.username', $this->getAttribute('user.username')]);
 
         return $dataProvider;
     }

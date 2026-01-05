@@ -19,8 +19,6 @@ $this->params['breadcrumbs'][] = $this->title;
         <?= Html::a('Create Track', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
-    <?php // echo $this->render('_search', ['model' => $searchModel]); ?>
-
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
         'filterModel' => $searchModel,
@@ -32,18 +30,14 @@ $this->params['breadcrumbs'][] = $this->title;
             'album_id',
             'title',
             'audio_asset_id',
-            //'duration',
-            //'genre_id',
-            //'created_at',
-            //'updated_at',
+
             [
-                'class' => ActionColumn::className(),
-                'urlCreator' => function ($action, Track $model, $key, $index, $column) {
+                'class' => ActionColumn::class,
+                'urlCreator' => function ($action, Track $model) {
                     return Url::toRoute([$action, 'id' => $model->id]);
-                 }
+                }
             ],
         ],
     ]); ?>
-
 
 </div>

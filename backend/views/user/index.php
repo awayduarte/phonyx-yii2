@@ -14,10 +14,15 @@ $this->title = 'Users';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
 <div class="user-index">
-
     <p>
         <?= Html::a('Create User', ['create'], ['class' => 'btn btn-success']) ?>
+        <?= Html::a(
+            'View deleted users',
+            ['deleted'],
+            ['class' => 'btn btn-outline-danger ml-2']
+        ) ?>
     </p>
+
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,

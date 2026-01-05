@@ -158,8 +158,17 @@ class UserController extends Controller
 
                 // user is no longer artist
                 if ($oldRole === User::ROLE_ARTIST && $model->role !== User::ROLE_ARTIST) {
-                    Artist::deleteAll(['user_id' => $model->id]);
+
+                    $artist = Artist::find()
+                        ->where(['user_id' => $model->id])
+                        ->andWhere(['deleted_at' => null])
+                        ->one();
+
+                    if ($artist) {
+                        $artist->softDelete();
+                    }
                 }
+
 
                 // -----------------------
                 // Force logout if user removed own admin role
@@ -201,15 +210,21 @@ class UserController extends Controller
      * @return \yii\web\Response
      * @throws NotFoundHttpException if the model cannot be found
      */
-    public function actionDelete($id)
+    public function actionDeleted()
     {
-        // soft delete instead of physical delete
-        $model = $this->findModel($id);
-        $model->softDelete();
+        $searchModel = new UserSearch();
+        $searchModel->onlyDeleted = true;
 
-        return $this->redirect(['index']);
+        $dataProvider = $searchModel->search(
+            $this->request->queryParams
+        );
+
+        return $this->render('deleted', [
+            'searchModel'  => $searchModel,
+            'dataProvider' => $dataProvider,
+        ]);
     }
-
+    
     /**
      * Finds the User model based on its primary key value.
      * If the model is not found, a 404 HTTP exception will be thrown.

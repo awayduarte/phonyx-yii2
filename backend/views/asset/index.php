@@ -13,20 +13,17 @@ use yii\grid\GridView;
 $this->title = 'Assets';
 $this->params['breadcrumbs'][] = $this->title;
 ?>
+
 <div class="asset-index">
 
     <p>
         <?= Html::a('Create Asset', ['create'], ['class' => 'btn btn-success']) ?>
     </p>
 
-    <?php // echo $this->render('_search', ['model' => $searchModel]); 
-    ?>
-
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
+        'filterModel'  => $searchModel,
 
-        // adminlte friendly pagination
         'pager' => [
             'class' => \yii\bootstrap4\LinkPager::class,
             'options' => ['class' => 'pagination justify-content-center'],
@@ -38,44 +35,39 @@ $this->params['breadcrumbs'][] = $this->title;
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
 
-            'id',
-            'type',
-            'path',
+            [
+                'attribute' => 'id',
+            ],
+            [
+                'attribute' => 'type',
+                'filter' => [
+                    'image' => 'image',
+                    'audio' => 'audio',
+                    'video' => 'video',
+                    'other' => 'other',
+                ],
+            ],
+            [
+                'attribute' => 'path',
+            ],
 
             [
-                'label' => 'used in',
+                'attribute' => 'used_count',
+                'label' => 'Used in',
                 'format' => 'raw',
-                'value' => function (Asset $model) {
-                    $used = [];
-
-                    if ($model->users) {
-                        $used[] = 'users';
-                    }
-                    if ($model->artists) {
-                        $used[] = 'artists';
-                    }
-                    if ($model->albums) {
-                        $used[] = 'albums';
-                    }
-                    if ($model->playlists) {
-                        $used[] = 'playlists';
-                    }
-                    if ($model->tracks) {
-                        $used[] = 'tracks';
-                    }
-
-                    return empty($used)
-                        ? '<span class="badge badge-secondary">unused</span>'
-                        : '<span class="badge badge-info">' . implode(', ', $used) . '</span>';
-                },
+                'value' => fn(Asset $model) =>
+                $model->used_count == 0
+                    ? '<span class="badge badge-secondary">unused</span>'
+                    : '<span class="badge badge-info">' . $model->used_count . '</span>',
             ],
 
             [
                 'class' => ActionColumn::class,
                 'urlCreator' => function ($action, Asset $model) {
                     return Url::toRoute([$action, 'id' => $model->id]);
-                }
+                },
             ],
         ],
     ]); ?>
+
 </div>
