@@ -15,8 +15,8 @@ $tabs = [
     'albums' => 'Albums',
 ];
 
-$defaultCover  = Url::to('@web/img/default-cover.png');       // ajusta se o teu default está noutro path
-$defaultAvatar = Url::to('@web/images/default-avatar.png');   // tens isto no teu projeto
+$defaultCover  = Url::to('@web/img/default-cover.png');       
+$defaultAvatar = Url::to('@web/images/default-avatar.png');   
 
 $toWebUrl = function (?string $path, string $fallback) {
     if (!$path) return $fallback;
@@ -73,7 +73,6 @@ $safe = function($obj, string $chain) {
             <?php else: ?>
                 <?php foreach ($tracks as $t): ?>
                     <?php
-                    // audio url (corrigido: garante slash)
                     $audioPath = $safe($t, 'audioAsset.path');
                     $audioUrl  = $toWebUrl($audioPath, '');
 

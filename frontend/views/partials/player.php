@@ -94,7 +94,7 @@ $this->registerJs(<<<JS
   const csrfToken     = '$csrf';
   const toggleLikeUrl = '$toggleLikeUrl';
 
-  // Global player state
+  
   const state = {
     audio,
     queue: [],
@@ -184,7 +184,7 @@ $this->registerJs(<<<JS
   });
 
   audio.addEventListener('ended', function(){
-    // Auto-next
+   
     window.phonyxNext();
   });
 
@@ -238,7 +238,7 @@ $this->registerJs(<<<JS
         const liked = (data.state === 'added');
         setLikeState(liked);
 
-        // Update queue item state
+        
         const found = getQueueItemById(trackId);
         if (found.item) found.item.isLiked = liked;
       })
@@ -283,18 +283,18 @@ $this->registerJs(<<<JS
     if (state.queue.length && state.currentIndex >= 0) {
       const next = state.currentIndex + 1;
       if (next < state.queue.length) return playByIndex(next);
-      // End of queue -> stop (or restart if you want)
+     
       audio.pause();
       audio.currentTime = 0;
       updatePlayIcon();
       return;
     }
-    // No queue -> just restart current
+    
     if (audio.src) audio.currentTime = 0;
   };
 
   window.phonyxPrev = function() {
-    // If track has played more than 3s -> restart
+    
     if (audio.currentTime > 3) {
       audio.currentTime = 0;
       return;
@@ -308,7 +308,7 @@ $this->registerJs(<<<JS
       return;
     }
 
-    // No queue
+  
     audio.currentTime = 0;
   };
 
@@ -326,11 +326,11 @@ $this->registerJs(<<<JS
     return true;
   };
 
-  // ===== Main API for pages =====
+  // ===== Main API  =====
   window.phonyxSetTrack = function (opts) {
     if (!opts || !opts.src) return;
 
-    // If queue exists and id is inside it, sync index
+    
     const tid = (opts.trackId ?? opts.id ?? '');
     if (tid) setCurrentById(tid);
 

@@ -8,16 +8,12 @@ use yii\bootstrap5\ActiveForm;
 
 $this->title = 'Login';
 
-/**
- * CSS específico do login (ficheiro externo)
- */
+
 $this->registerCssFile('@web/css/login.css', [
     'depends' => [\yii\bootstrap5\BootstrapAsset::class],
 ]);
 
-/**
- * JS: faz o vinil rodar quando se submete o login
- */
+
 $this->registerJs(<<<JS
 const form = document.getElementById("loginForm");
 const vinyl = document.getElementById("vinyl");

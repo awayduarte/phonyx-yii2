@@ -92,7 +92,7 @@ $this->registerJs(<<<JS
     });
   }
 
-  // ====== BOTÃO DE GOSTO NO PLAYER ======
+  // ====== PLAYER ======
   const likeBtn       = document.getElementById('player-like-btn');
   const csrfToken     = '$csrf';
   const toggleLikeUrl = '$toggleLikeUrl';
@@ -210,9 +210,9 @@ JS);
         </div>
     </section>
 
-</div> <!-- fecha .phonyx-hero -->
+</div> 
 
-<!-- CONTINUAR A OUVIR / ÚLTIMAS FAIXAS -->
+<!-- LAST TRACKS -->
 <section class="section continue-section">
     <div class="section-header">
         <h2>Continuar a ouvir</h2>
@@ -269,7 +269,7 @@ JS);
     </div>
 </section>
 
-<!-- DESCOBRE POR GÉNERO / MOOD -->
+<!-- GENER -->
 <section class="section mood-section">
     <div class="section-header">
         <h2>Descobre por género / mood</h2>
@@ -288,7 +288,7 @@ JS);
     </div>
 </section>
 
-<!-- TOP DO MOMENTO -->
+<!-- TOP -->
 <section class="section top-section">
     <div class="section-header">
         <h2>Top do momento</h2>
@@ -344,7 +344,7 @@ JS);
     </div>
 </section>
 
-<!-- BLOCO ESPECIAL PARA ARTISTAS -->
+<!-- ARTISTs block-->
 <section class="section artist-cta">
     <div class="artist-cta-inner">
         <div class="artist-cta-text">
@@ -366,7 +366,6 @@ JS);
     </div>
 </section>
 
-<!-- COMO FUNCIONA EM 3 PASSOS -->
 <section class="section how-section">
     <div class="section-header">
         <h2>Como funciona</h2>
@@ -394,7 +393,7 @@ JS);
     </div>
 </section>
 
-<!-- PREVIEW DA APP MOBILE -->
+<!-- PREVIEW APP MOBILE -->
 <section class="section mobile-preview">
     <div class="mobile-inner">
         <div class="mobile-mockup">

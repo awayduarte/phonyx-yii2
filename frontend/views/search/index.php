@@ -39,7 +39,6 @@ $pathToUrl = function (?string $path, string $fallback) {
         <a href="<?= Url::to(['site/index']) ?>" class="back-home-btn">← Voltar ao Home</a>
     </div>
 
-    <!-- barra para voltar a mudar a pesquisa -->
     <form action="<?= Url::to(['search/index']) ?>" method="get" class="search-inline-form">
         <input type="text"
                name="q"
@@ -71,7 +70,7 @@ $pathToUrl = function (?string $path, string $fallback) {
         <?php endforeach; ?>
     </div>
 
-    <!-- ARTISTAS -->
+    <!-- ARTISTS -->
     <?php if ($activeTab === 'all' || $activeTab === 'artists'): ?>
         <section class="search-section">
             <h2 class="search-section-title">Artistas</h2>
@@ -118,7 +117,7 @@ $pathToUrl = function (?string $path, string $fallback) {
         </section>
     <?php endif; ?>
 
-    <!-- FAIXAS -->
+    <!-- Tracks -->
     <?php if ($activeTab === 'all' || $activeTab === 'tracks'): ?>
         <section class="search-section">
             <h2 class="search-section-title">Faixas</h2>
@@ -169,7 +168,7 @@ $pathToUrl = function (?string $path, string $fallback) {
         </section>
     <?php endif; ?>
 
-    <!-- ÁLBUNS -->
+    <!-- ÁLBUM -->
     <?php if ($activeTab === 'all' || $activeTab === 'albums'): ?>
         <section class="search-section">
             <h2 class="search-section-title">Álbuns</h2>
@@ -255,7 +254,7 @@ $pathToUrl = function (?string $path, string $fallback) {
         </section>
     <?php endif; ?>
 
-    <!-- PERFIS / USERS -->
+    <!--USERS -->
     <?php if ($activeTab === 'all' || $activeTab === 'users'): ?>
         <section class="search-section">
             <h2 class="search-section-title">Perfis</h2>

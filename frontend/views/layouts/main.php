@@ -3,7 +3,7 @@
 use frontend\assets\AppAsset;
 use yii\helpers\Html;
 
-// calcular displayName 
+
 $identity = Yii::$app->user->identity ?? null;
 if (!isset($displayName) && $identity) {
     $displayName = $identity->username
@@ -24,7 +24,7 @@ AppAsset::register($this);
     <?php $this->head() ?>
 
     <?php
-    // CSS principal da PHONYX
+    // CSS principal
     $this->registerCssFile('@web/css/phonyx.css', [
         'depends' => [\yii\web\YiiAsset::class],
     ]);
@@ -76,7 +76,6 @@ $js = <<<JS
     }
   });
 
-  // fechar com ESC
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       closeMenu();

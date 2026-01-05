@@ -7,9 +7,7 @@ use yii\helpers\Url;
 
 $this->title = 'About';
 
-/**
- * JS do music player + minimizar
- */
+
 $this->registerJs(<<<JS
 const audio = document.getElementById('phonyx-audio');
 const playBtn = document.getElementById('player-play');
@@ -76,9 +74,9 @@ if (toggleBtn && shell) {
   toggleBtn.addEventListener('click', function() {
     shell.classList.toggle('collapsed');
     if (shell.classList.contains('collapsed')) {
-      toggleBtn.textContent = '▴'; // mostrar que expande
+      toggleBtn.textContent = '▴'; 
     } else {
-      toggleBtn.textContent = '▾'; // mostrar que minimiza
+      toggleBtn.textContent = '▾'; 
     }
   });
 }
@@ -87,9 +85,6 @@ JS);
 
 <div class="phonyx-hero">
 
-    
-
-    <!-- PLAYER FIXO EM BAIXO -->
     <section class="player-shell" id="player-shell">
         <div class="player-bar">
             <div class="player-left">
@@ -124,8 +119,6 @@ JS);
 
             <button class="player-toggle" type="button" id="player-toggle">▾</button>
         </div>
-
-        <!-- AUDIO REAL (troca o caminho do ficheiro pela tua música) -->
         <audio
                 id="phonyx-audio"
                 src="<?= Yii::getAlias('@web/media/disstrack-albert.mp3') ?>">

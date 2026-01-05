@@ -3,7 +3,7 @@
 use yii\helpers\Html;
 use yii\helpers\Url;
 
-// calcular displayName caso não venha passado
+
 $identity = Yii::$app->user->identity ?? null;
 if (!isset($displayName) && $identity) {
     $displayName = $identity->username
@@ -15,14 +15,14 @@ if (!isset($displayName) && $identity) {
 ?>
 <header class="phonyx-navbar">
 
-    <!-- LADO ESQUERDO: LOGO -->
+ 
     <div class="nav-left">
         <a href="<?= Url::to(['site/index']) ?>" class="nav-logo">
             <img src="<?= Url::to('@web/phonyx_logo_lateral.png') ?>" alt="Phonyx">
         </a>
     </div>
 
-    <!-- CENTRO: MENU PRINCIPAL -->
+    
     <nav class="nav-center">
         <a href="<?= Url::to(['site/index']) ?>"
             class="nav-link <?= Yii::$app->controller->id === 'site' && Yii::$app->controller->action->id === 'index' ? 'active' : '' ?>">
@@ -51,17 +51,17 @@ if (!isset($displayName) && $identity) {
         </a>
     </nav>
 
-    <!-- DIREITA: AUTH / USER -->
+    
     <div class="nav-right">
         <?php if (Yii::$app->user->isGuest): ?>
 
-            <!-- GUEST: SIGN UP + LOGIN -->
+            
             <a href="<?= Url::to(['site/signup']) ?>" class="btn-signup">Sign up</a>
             <a href="<?= Url::to(['site/login']) ?>" class="btn-login">Login</a>
 
         <?php else: ?>
 
-            <!-- USER LOGADO: PILL COM DROPDOWN -->
+            
             <div class="user-pill js-user-nav">
                 <button class="user-trigger js-user-trigger">
                     <span class="pill-avatar">
