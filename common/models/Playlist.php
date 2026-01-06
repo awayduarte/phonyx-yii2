@@ -120,7 +120,7 @@ class Playlist extends \yii\db\ActiveRecord
 
         public function FazPublishNoMosquitto($topic, $msg)
     {
-        $server = "127.0.0.1";
+        $server = "172.22.21.227";
         $port = 1883;
         $client_id = "phpMQTT-playlist";
 
