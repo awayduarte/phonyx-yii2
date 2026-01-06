@@ -265,4 +265,51 @@ class Track extends ActiveRecord
     {
         return (int)$this->getLikes()->count();
     }
+
+    public function afterSave($insert, $changedAttributes)
+{
+    parent::afterSave($insert, $changedAttributes);
+
+    $obj = new \stdClass();
+    $obj->id = $this->id;
+    $obj->title = $this->title;
+    $obj->artist_id = $this->artist_id;
+    $obj->duration = $this->duration;
+
+    $json = json_encode($obj);
+
+    if ($insert)
+        $this->FazPublishNoMosquitto("TRACK_INSERT", $json);
+    else
+        $this->FazPublishNoMosquitto("TRACK_UPDATE", $json);
+}
+
+public function afterDelete()
+{
+    parent::afterDelete();
+
+    $obj = new \stdClass();
+    $obj->id = $this->id;
+
+    $json = json_encode($obj);
+
+    $this->FazPublishNoMosquitto("TRACK_DELETE", $json);
+}
+
+public function FazPublishNoMosquitto($topic, $msg)
+{
+    $server = "127.0.0.1";
+    $port = 1883;
+    $client_id = "phpMQTT-publisher";
+
+    $mqtt = new \app\mosquitto\phpMQTT($server, $port, $client_id);
+
+    if ($mqtt->connect(true, NULL, "", "")) {
+        $mqtt->publish($topic, $msg, 0);
+        $mqtt->close();
+    } else {
+        file_put_contents("mqtt_error.log", "MQTT connection timeout");
+    }
+}
+
 }

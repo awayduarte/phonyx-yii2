@@ -31,11 +31,13 @@ class TrackController extends ActiveController
     public function actions()
     {
         $actions = parent::actions();
+        
         unset(
             $actions['index'],
             $actions['create'],
             $actions['update'],
-            $actions['delete']);
+            $actions['delete']); 
+            
         return $actions;
     }
 

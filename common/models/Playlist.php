@@ -87,4 +87,81 @@ class Playlist extends \yii\db\ActiveRecord
             ->exists();
     }
 
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+
+        $obj = new \stdClass();
+        $obj->id = $this->id;
+        $obj->title = $this->title;
+        $obj->user_id = $this->user_id;
+
+        $json = json_encode($obj);
+
+        if ($insert)
+            $this->FazPublishNoMosquitto("PLAYLIST_INSERT", $json);
+        else
+            $this->FazPublishNoMosquitto("PLAYLIST_UPDATE", $json);
+    }
+
+
+    public function afterDelete()
+    {
+        parent::afterDelete();
+
+        $obj = new \stdClass();
+        $obj->id = $this->id;
+
+        $json = json_encode($obj);
+
+        $this->FazPublishNoMosquitto("PLAYLIST_DELETE", $json);
+    }
+
+        public function FazPublishNoMosquitto($topic, $msg)
+    {
+        $server = "127.0.0.1";
+        $port = 1883;
+        $client_id = "phpMQTT-playlist";
+
+        $mqtt = new \app\mosquitto\phpMQTT($server, $port, $client_id);
+
+        if ($mqtt->connect(true, NULL, "", "")) {
+            $mqtt->publish($topic, $msg, 0);
+            $mqtt->close();
+        } else {
+            file_put_contents("mqtt_error.log", "MQTT connection timeout");
+        }
+    }
+
+    public function notifyAddTrack($trackId)
+    {
+        $obj = new \stdClass();
+        $obj->playlist_id = $this->id;
+        $obj->track_id = $trackId;
+
+        $this->FazPublishNoMosquitto("PLAYLIST_ADD_TRACK", json_encode($obj));
+    }
+
+    public function notifyRemoveTrack($trackId)
+    {
+        $obj = new \stdClass();
+        $obj->playlist_id = $this->id;
+        $obj->track_id = $trackId;
+
+        $this->FazPublishNoMosquitto("PLAYLIST_REMOVE_TRACK", json_encode($obj));
+    }
+
+    public function notifyReorder()
+    {
+        $obj = new \stdClass();
+        $obj->playlist_id = $this->id;
+
+        $this->FazPublishNoMosquitto("PLAYLIST_REORDER", json_encode($obj));
+    }
+
+
+
+
+
 }

@@ -61,6 +61,7 @@ class PlaylistController extends ActiveController
             $pt->playlist_id = (int)$playlist->id;
             $pt->track_id = (int)$track->id;
             $pt->save(false);
+            $playlist->notifyAddTrack($track->id);
         }
 
         return ['ok' => true];
@@ -79,6 +80,8 @@ class PlaylistController extends ActiveController
             'playlist_id' => (int)$playlist->id,
             'track_id' => (int)$trackId,
         ]);
+        $playlist->notifyRemoveTrack($trackId);
+
 
         return ['ok' => true];
     }
@@ -99,8 +102,24 @@ class PlaylistController extends ActiveController
                 ]
             );
         }
+        $playlist->notifyReorder();
 
         return ['message' => 'Playlist reordered'];
     }
-    
+
+
+
+
+    private function checkOwner($playlist)
+    {
+        if (!$playlist) {
+            throw new NotFoundHttpException('Playlist not found');
+        }
+
+        if ((int)$playlist->user_id !== (int)Yii::$app->user->id) {
+            throw new ForbiddenHttpException('Not allowed');
+        }
+    }
+
+
 }

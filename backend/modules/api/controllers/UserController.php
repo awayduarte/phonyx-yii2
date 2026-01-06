@@ -1,6 +1,7 @@
 <?php
 
 namespace backend\modules\api\controllers;
+use Yii;
 
 use yii\rest\ActiveController;
 
@@ -15,41 +16,32 @@ class UserController extends ActiveController
      */
     public $modelClass = 'common\models\User'; 
 
-    public function actionIndex()
-    {
-        return $this->render('index');
-    }
 
+
+    /*
     public function actionCount()
     {
     $usersmodel = new $this->modelClass;
     $recs = $usersmodel::find()->all();
     return ['count' => count($recs)];
     }
+    */
 
-    public function actionNomes()
+    public function actionMe()
     {
-    $usersmodel = new $this->modelClass;
-    $recs = $usersmodel::find()->select(['username'])->all();
-    return $recs;
+        $user = Yii::$app->user->identity;
+
+        if (!$user) {
+            Yii::$app->response->statusCode = 401;
+            return ['error' => 'Not authenticated'];
+        }
+
+        return [
+            'id' => (int)$user->id,
+            'username' => $user->username,
+            'email' => $user->email,
+        ];
     }
 
-    public function actionNome($username)
-    {
-        $modelClass = $this->modelClass;
-        $rec = $modelClass::find()
-            ->where(['username' => $username])
-            ->asArray()
-            ->one();
-
-        return $rec ?: ['error' => 'User not found'];
-    }   
-    public function actionPreco($id)
-    {
-    $pratosmodel = new $this->modelClass;
-    //$recs = $pratosmodel::find()->select(['preco'])->where(['id' => $id])->all(); //array
-    $recs = $pratosmodel::find()->select(['preco'])->where(['id' => $id])->one(); //objeto json
-    return $recs;
-    }
     
 }

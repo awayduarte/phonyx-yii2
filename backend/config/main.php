@@ -26,7 +26,7 @@ return [
             'identityCookie' => ['name' => '_identity-backend', 'httpOnly' => true],
         ],
         'session' => [
-            // this is the name of the session cookie used for login on the backend
+
             'name' => 'advanced-backend',
         ],
         'log' => [
@@ -41,13 +41,13 @@ return [
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
-        // PrettyUrl
+
         'urlManager' => [
         'enablePrettyUrl' => true,
         'showScriptName' => false,
         'rules' => [
 
-            //Tracks
+            //TRACKS
             [
                 'class' => 'yii\rest\UrlRule',
                 'controller' => ['api/track'],
@@ -62,7 +62,7 @@ return [
             ],
 
             /*
-            * PLAYLISTS
+            PLAYLISTS
             */
             [
                 'class' => 'yii\rest\UrlRule',
@@ -77,7 +77,7 @@ return [
             ],
 
             /*
-            * ARTISTS
+            ARTISTS
             */
             [
                 'class' => 'yii\rest\UrlRule',
@@ -86,14 +86,11 @@ return [
                 'extraPatterns' => [
                     'GET {id}/tracks' => 'tracks',
                     'GET {id}/albums' => 'albums',
-                    'POST {id}/follow' => 'follow',
-                    'DELETE {id}/follow' => 'unfollow',
-                    'GET count' => 'count',
                 ],
             ],
 
             /*
-            * USERS
+            USERS
             */
             [
                 'class' => 'yii\rest\UrlRule',
@@ -101,8 +98,6 @@ return [
                 'pluralize' => false,
                 'extraPatterns' => [
                     'GET me' => 'me',
-                    'PUT me' => 'update-me',
-                    'GET {username}/nome' => 'nome',
                 ],
             ],
         ],
