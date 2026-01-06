@@ -3,62 +3,64 @@
 namespace common\models;
 
 use Yii;
+use yii\db\ActiveRecord;
 use yii\web\UploadedFile;
 
-class Asset extends \yii\db\ActiveRecord
+class Asset extends ActiveRecord
 {
     // asset types
-    const TYPE_IMAGE = 'image';
-    const TYPE_AUDIO = 'audio';
-    const TYPE_OTHER = 'other';
+    public const TYPE_IMAGE = 'image';
+    public const TYPE_AUDIO = 'audio';
+    public const TYPE_OTHER = 'other';
 
-    // uploaded file (not stored in db)
+    /**
+     * Uploaded file (virtual attribute, not stored in DB)
+     * @var UploadedFile|null
+     */
     public $file;
 
+    /**
+     * Helper virtual attribute (optional usage)
+     * @var int|null
+     */
     public $used_count;
 
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'asset';
     }
 
-    public function rules()
+    public function rules(): array
     {
         return [
-            // file required only on create
+            // File required only on create scenario
             [['file'], 'required', 'on' => 'create'],
 
-            // file validation
-            [
-                ['file'],
-                'file',
+            // Validate file
+            [['file'], 'file',
                 'skipOnEmpty' => true,
                 'extensions' => ['jpg', 'jpeg', 'png', 'mp3'],
-                'maxSize' => 1024 * 1024 * 12, // 12mb max
+                'maxSize' => 1024 * 1024 * 12, // 12MB
             ],
 
-            // detected asset type
+            // Columns
             [['type'], 'string'],
-
-            // stored relative path
             [['path'], 'string', 'max' => 255],
 
-            // who uploaded the asset
-            [['created_by_user_id'], 'integer'],
 
-            // timestamps handled by db
             [['created_at', 'updated_at'], 'safe'],
         ];
     }
 
-    /**
-     * detect asset type from file extension
-     */
-    protected function detectType()
+    protected function detectType(): string
     {
-        $ext = strtolower($this->file->extension);
+        if (!$this->file instanceof UploadedFile) {
+            return self::TYPE_OTHER;
+        }
 
-        if (in_array($ext, ['jpg', 'jpeg', 'png'])) {
+        $ext = strtolower((string)$this->file->extension);
+
+        if (in_array($ext, ['jpg', 'jpeg', 'png'], true)) {
             return self::TYPE_IMAGE;
         }
 
@@ -69,41 +71,62 @@ class Asset extends \yii\db\ActiveRecord
         return self::TYPE_OTHER;
     }
 
-    /**
-     * before save logic
-     */
-    public function beforeSave($insert)
+   
+    protected static function hasColumn(string $name): bool
+    {
+        $schema = static::getTableSchema();
+        return $schema && isset($schema->columns[$name]);
+    }
+
+  
+    public function beforeSave($insert): bool
     {
         if (!parent::beforeSave($insert)) {
             return false;
         }
 
+       
+        $now = date('Y-m-d H:i:s');
+        if ($insert) {
+            if (static::hasColumn('created_at') && empty($this->created_at)) {
+                $this->created_at = $now;
+            }
+        }
+        if (static::hasColumn('updated_at')) {
+            $this->updated_at = $now;
+        }
+
         if ($this->file instanceof UploadedFile) {
 
-            // detect type automatically
+            // Detect type automatically
             $this->type = $this->detectType();
 
-            // set uploader user only on create
-            if ($this->isNewRecord && !Yii::$app->user->isGuest) {
-                $this->created_by_user_id = Yii::$app->user->id;
+            
+            if ($insert && static::hasColumn('created_by_user_id') && !Yii::$app->user->isGuest) {
+                $this->created_by_user_id = (int)Yii::$app->user->id;
             }
 
-            // define upload folder
+            // Define upload folder
             $folder = 'uploads/' . $this->type;
             $basePath = Yii::getAlias('@webroot/' . $folder);
 
-            // ensure folder exists
+            // Ensure folder exists
             if (!is_dir($basePath)) {
-                mkdir($basePath, 0775, true);
+                @mkdir($basePath, 0775, true);
             }
 
-            // generate unique filename
-            $filename = uniqid() . '.' . $this->file->extension;
+            // Generate unique filename
+            $ext = strtolower((string)$this->file->extension);
+            $filename = uniqid('asset_', true) . '.' . $ext;
 
-            // save file
-            $this->file->saveAs($basePath . '/' . $filename);
+            // Save file
+            $fullPath = $basePath . DIRECTORY_SEPARATOR . $filename;
+            if (!$this->file->saveAs($fullPath)) {
+                $this->addError('file', 'Failed to save uploaded file.');
+                return false;
+            }
 
-            // save relative path
+            // Save relative path
             $this->path = $folder . '/' . $filename;
         }
 
@@ -114,9 +137,14 @@ class Asset extends \yii\db\ActiveRecord
     // relations
     // -----------------------
 
-    // who uploaded this asset
+   
     public function getCreatedByUser()
     {
+        if (!static::hasColumn('created_by_user_id')) {
+            // Column not present in DB -> no relation
+            return $this->hasOne(User::class, ['id' => 'id'])->where('1=0');
+        }
+
         return $this->hasOne(User::class, ['id' => 'created_by_user_id']);
     }
 
@@ -149,12 +177,12 @@ class Asset extends \yii\db\ActiveRecord
     // helpers
     // -----------------------
 
-    public function isImage()
+    public function isImage(): bool
     {
         return $this->type === self::TYPE_IMAGE;
     }
 
-    public function isAudio()
+    public function isAudio(): bool
     {
         return $this->type === self::TYPE_AUDIO;
     }

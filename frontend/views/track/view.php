@@ -11,20 +11,24 @@ $this->registerCssFile(
     ['depends' => [\frontend\assets\AppAsset::class]]
 );
 
-// artistas em feat.
+// featured artists 
 $featNames = [];
 foreach ($model->featuredArtists as $featArtist) {
-    $featNames[] = Html::encode($featArtist->artist_name);
+    if ($featArtist instanceof \common\models\Artist) {
+        $featNames[] = Html::encode($featArtist->stage_name);
+    } elseif (isset($featArtist->artist) && $featArtist->artist) {
+        $featNames[] = Html::encode($featArtist->artist->stage_name);
+    }
 }
 $featLabel = $featNames ? ' feat. ' . implode(', ', $featNames) : '';
+
 ?>
 
 <div class="track-page">
 
     <div class="track-hero">
         <div class="track-cover">
-            <img src="<?= Html::encode($model->coverUrl) ?>"
-                 alt="Capa da faixa <?= Html::encode($model->title) ?>">
+            <img src="<?= Html::encode($model->coverUrl) ?>" alt="Capa da faixa <?= Html::encode($model->title) ?>">
         </div>
 
         <div class="track-main-info">
@@ -82,14 +86,8 @@ $featLabel = $featNames ? ' feat. ' . implode(', ', $featNames) : '';
                         ▶ Tocar
                     </button>
 
-                    <button type="button"
-                            class="btn btn-ghost track-like-btn"
-                            data-id="<?= (int)$model->id ?>">
-                        ❤️ Gostar (<?= $model->likesCount ?>)
-                    </button>
 
-                    <button type="button"
-                            class="btn btn-ghost track-add-playlist">
+                    <button type="button" class="btn btn-ghost track-add-playlist">
                         + Adicionar à playlist
                     </button>
                 </div>
@@ -118,12 +116,11 @@ $featLabel = $featNames ? ' feat. ' . implode(', ', $featNames) : '';
 
                 <div class="track-more-list">
                     <?php foreach ($model->artist->tracks as $other): ?>
-                        <?php if ($other->id === $model->id) continue; ?>
-                        <a href="<?= Url::to(['track/view', 'id' => $other->id]) ?>"
-                           class="track-more-item">
+                        <?php if ($other->id === $model->id)
+                            continue; ?>
+                        <a href="<?= Url::to(['track/view', 'id' => $other->id]) ?>" class="track-more-item">
                             <div class="track-more-cover">
-                                <img src="<?= Html::encode($other->coverUrl) ?>"
-                                     alt="<?= Html::encode($other->title) ?>">
+                                <img src="<?= Html::encode($other->coverUrl) ?>" alt="<?= Html::encode($other->title) ?>">
                             </div>
                             <div class="track-more-text">
                                 <span class="track-more-title">

@@ -154,7 +154,7 @@
     margin-top:20px;
   }
   
-  /* --- Save button (main) --- */
+  /* --- Save button --- */
   .artist-edit-save{
     padding:13px 18px;
     border-radius:16px;
@@ -220,7 +220,7 @@
     box-shadow:0 12px 30px rgba(255,140,80,.45);
   }
   /* ===============================
-   Artist action buttons (global)
+   Artist action buttons
    =============================== */
 
 .artist-actions {
@@ -244,7 +244,7 @@
     transition: all .2s ease;
   }
   
-  /* Primary (orange) */
+  /* Primary */
   .artist-btn-primary {
     background: linear-gradient(135deg, #ff9f55, #ff7a2f);
     color: #111;
@@ -256,7 +256,7 @@
     box-shadow: 0 10px 24px rgba(255, 140, 70, .45);
   }
   
-  /* Secondary (dark outline) */
+  /* Secondary */
   .artist-btn-secondary {
     background: rgba(255,255,255,.04);
     color: #fff;

@@ -8,8 +8,9 @@ class TrackFeaturedArtist extends \yii\db\ActiveRecord
 {
     public static function tableName()
     {
-        return 'track_featured_artist';
+        return '{{%track_featured_artist}}';
     }
+
 
     public function rules()
     {
@@ -20,14 +21,20 @@ class TrackFeaturedArtist extends \yii\db\ActiveRecord
 
             // fk -> track
             [
-                ['track_id'], 'exist', 'skipOnError' => true,
-                'targetClass' => Track::class, 'targetAttribute' => ['track_id' => 'id']
+                ['track_id'],
+                'exist',
+                'skipOnError' => true,
+                'targetClass' => Track::class,
+                'targetAttribute' => ['track_id' => 'id']
             ],
 
             // fk -> artist
             [
-                ['artist_id'], 'exist', 'skipOnError' => true,
-                'targetClass' => Artist::class, 'targetAttribute' => ['artist_id' => 'id']
+                ['artist_id'],
+                'exist',
+                'skipOnError' => true,
+                'targetClass' => Artist::class,
+                'targetAttribute' => ['artist_id' => 'id']
             ],
         ];
     }

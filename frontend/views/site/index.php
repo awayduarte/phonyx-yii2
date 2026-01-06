@@ -6,20 +6,17 @@ use yii\helpers\Url;
 
 $this->title = 'PHONYX';
 
-// Utilizador atual (se precisares para algo na home)
+
 $identity = Yii::$app->user->identity ?? null;
 $displayName = $identity
     ? ($identity->username ?? $identity->email ?? 'User')
     : null;
 
-// URL para o toggle de "gosto" + CSRF (o JS usa isto para falar com o controller)
+
 $toggleLikeUrl = Url::to(['playlist/toggle-like']);
 $csrf          = Yii::$app->request->csrfToken;
 
-/**
- * JS do player, dropdown do user e pesquisa na navbar
- * (funciona sobre o player que está no layout, porque usa os mesmos IDs)
- */
+
 $this->registerJs(<<<JS
 (function () {
   const audio        = document.getElementById('phonyx-audio');
@@ -87,7 +84,7 @@ $this->registerJs(<<<JS
     audio.volume = volumeSlider.value;
   }
 
-  // minimizar / expandir player
+ 
   if (toggleBtn && shell) {
     toggleBtn.addEventListener('click', function() {
       shell.classList.toggle('collapsed');

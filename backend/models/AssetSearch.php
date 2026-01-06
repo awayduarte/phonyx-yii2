@@ -10,7 +10,7 @@ class AssetSearch extends Asset
 {
     public $used_count;
 
-    public function rules()
+    public function rules(): array
     {
         return [
             [['id', 'used_count'], 'integer'],

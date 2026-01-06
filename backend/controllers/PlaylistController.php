@@ -25,6 +25,16 @@ class PlaylistController extends Controller
         return array_merge(
             parent::behaviors(),
             [
+                'access' => [
+            'class' => \yii\filters\AccessControl::class,
+            'only' => ['like', 'unlike'],
+            'rules' => [
+                [
+                    'allow' => true,
+                    'roles' => ['@'],
+                ],
+            ],
+        ],
                 'verbs' => [
                     'class' => VerbFilter::class,
                     'actions' => [
@@ -190,4 +200,58 @@ class PlaylistController extends Controller
 
         throw new NotFoundHttpException('The requested page does not exist.');
     }
+
+    public function actionLike($id)
+{
+    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+    $playlistId = (int)$id;
+    $userId = (int)Yii::$app->user->id;
+
+    // Basic existence check
+    if (!\common\models\Playlist::find()->where(['id' => $playlistId])->exists()) {
+        return ['ok' => false, 'message' => 'Playlist not found'];
+    }
+
+    $exists = (new \yii\db\Query())
+        ->from('{{%playlist_like}}')
+        ->where(['playlist_id' => $playlistId, 'user_id' => $userId])
+        ->exists();
+
+    if (!$exists) {
+        Yii::$app->db->createCommand()->insert('{{%playlist_like}}', [
+            'playlist_id' => $playlistId,
+            'user_id' => $userId,
+            'created_at' => new \yii\db\Expression('CURRENT_TIMESTAMP'),
+        ])->execute();
+    }
+
+    $count = (int)(new \yii\db\Query())
+        ->from('{{%playlist_like}}')
+        ->where(['playlist_id' => $playlistId])
+        ->count();
+
+    return ['ok' => true, 'liked' => true, 'count' => $count];
+}
+
+public function actionUnlike($id)
+{
+    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
+    $playlistId = (int)$id;
+    $userId = (int)Yii::$app->user->id;
+
+    Yii::$app->db->createCommand()->delete('{{%playlist_like}}', [
+        'playlist_id' => $playlistId,
+        'user_id' => $userId,
+    ])->execute();
+
+    $count = (int)(new \yii\db\Query())
+        ->from('{{%playlist_like}}')
+        ->where(['playlist_id' => $playlistId])
+        ->count();
+
+    return ['ok' => true, 'liked' => false, 'count' => $count];
+}
+
 }
