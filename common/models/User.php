@@ -48,40 +48,42 @@ class User extends \yii\db\ActiveRecord implements IdentityInterface
     // -----------------------
 
     public function rules()
-    {
-        return [
-            [['username', 'email'], 'required'],
-            ['password', 'required', 'on' => 'create'],
+{
+    return [
+        [['username', 'email'], 'required'],
+        ['password', 'required', 'on' => 'create'],
 
-            [['status', 'profile_asset_id'], 'integer'],
-            [['created_at', 'updated_at', 'deleted_at'], 'safe'],
-            [['role'], 'string'],
+        [['status', 'profile_asset_id'], 'integer'],
+        [['created_at, updated_at, deleted_at'], 'safe'],
+        [['role'], 'string'],
 
-            [['username'], 'string', 'max' => 100],
-            [['email'], 'string', 'max' => 150],
-            [['password'], 'string', 'min' => 6],
+        [['username'], 'string', 'max' => 100],
+        [['email'], 'string', 'max' => 150],
+        [['password'], 'string', 'min' => 6],
 
-            [['email'], 'unique'],
-            ['role', 'in', 'range' => array_keys(self::optsRole())],
+        ['email', 'email'],
+        ['email', 'unique'],
 
-            [
-                ['profile_asset_id'],
-                'exist',
-                'skipOnError' => true,
-                'targetClass' => Asset::class,
-                'targetAttribute' => ['profile_asset_id' => 'id'],
-            ],
-            // Profile image upload (optional)
-            [
-                ['profileFile'],
-                'file',
-                'skipOnEmpty' => true,
-                'extensions' => ['png', 'jpg', 'jpeg', 'webp'],
-                'maxSize' => 5 * 1024 * 1024,
-            ],
+        ['role', 'in', 'range' => array_keys(self::optsRole())],
 
-        ];
-    }
+        [
+            ['profile_asset_id'],
+            'exist',
+            'skipOnError' => true,
+            'targetClass' => Asset::class,
+            'targetAttribute' => ['profile_asset_id' => 'id'],
+        ],
+
+        [
+            ['profileFile'],
+            'file',
+            'skipOnEmpty' => true,
+            'extensions' => ['png', 'jpg', 'jpeg', 'webp'],
+            'maxSize' => 5 * 1024 * 1024,
+        ],
+    ];
+}
+
 
     // -----------------------
     // IdentityInterface

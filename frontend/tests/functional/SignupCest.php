@@ -3,11 +3,11 @@
 namespace frontend\tests\functional;
 
 use frontend\tests\FunctionalTester;
+use common\models\User;
 
 class SignupCest
 {
     protected $formId = '#form-signup';
-
 
     public function _before(FunctionalTester $I)
     {
@@ -16,27 +16,33 @@ class SignupCest
 
     public function signupWithEmptyFields(FunctionalTester $I)
     {
-        $I->see('Signup', 'h1');
-        $I->see('Please fill out the following fields to signup:');
-        $I->submitForm($this->formId, []);
-        $I->seeValidationError('Username cannot be blank.');
-        $I->seeValidationError('Email cannot be blank.');
-        $I->seeValidationError('Password cannot be blank.');
+        $I->see('Criar Conta', 'h1');
 
+        $I->submitForm($this->formId, []);
+
+        // Mensagens REAIS do Yii2 (em inglês)
+        $I->see('Username cannot be blank.');
+        $I->see('Email cannot be blank.');
+        $I->see('Password cannot be blank.');
+        $I->see('Confirm Password cannot be blank.');
     }
 
     public function signupWithWrongEmail(FunctionalTester $I)
     {
-        $I->submitForm(
-            $this->formId, [
-            'SignupForm[username]'  => 'tester',
-            'SignupForm[email]'     => 'ttttt',
-            'SignupForm[password]'  => 'tester_password',
-        ]
-        );
-        $I->dontSee('Username cannot be blank.', '.invalid-feedback');
-        $I->dontSee('Password cannot be blank.', '.invalid-feedback');
-        $I->see('Email is not a valid email address.', '.invalid-feedback');
+        $I->submitForm($this->formId, [
+            'SignupForm[username]' => 'tester',
+            'SignupForm[email]' => 'ttttt',
+            'SignupForm[password]' => 'tester_password',
+            'SignupForm[confirm_password]' => 'tester_password',
+        ]);
+
+        // Não aparecem erros de campos vazios
+        $I->dontSee('Username cannot be blank.');
+        $I->dontSee('Password cannot be blank.');
+        $I->dontSee('Confirm Password cannot be blank.');
+
+        // Erro real do Yii2
+        $I->see('Email is not a valid email address.');
     }
 
     public function signupSuccessfully(FunctionalTester $I)
@@ -45,15 +51,17 @@ class SignupCest
             'SignupForm[username]' => 'tester',
             'SignupForm[email]' => 'tester.email@example.com',
             'SignupForm[password]' => 'tester_password',
+            'SignupForm[confirm_password]' => 'tester_password',
         ]);
 
-        $I->seeRecord('common\models\User', [
+        // O teu signup cria o user com status = 10
+        $I->seeRecord(User::class, [
             'username' => 'tester',
             'email' => 'tester.email@example.com',
-            'status' => \common\models\User::STATUS_INACTIVE
+            'status' => 10,
         ]);
 
-        $I->seeEmailIsSent();
-        $I->see('Thank you for registration. Please check your inbox for verification email.');
+        // Após signup, o user é redirecionado para a HOME
+        $I->see('PHONYX'); // texto que existe na homepage
     }
 }

@@ -32,6 +32,7 @@ $this->title = 'Criar playlist';
     <?php endif; ?>
 
     <?php $form = ActiveForm::begin([
+        'id' => 'playlist-form',
         'options' => ['enctype' => 'multipart/form-data'],
     ]); ?>
 
