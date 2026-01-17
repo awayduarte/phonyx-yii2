@@ -19,6 +19,9 @@ return [
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-backend',
+            'parsers' => [
+                'application/json' => 'yii\web\JsonParser',
+            ],
         ],
         'user' => [
             'identityClass' => 'common\models\User',
@@ -43,78 +46,78 @@ return [
         ],
 
         'urlManager' => [
-        'enablePrettyUrl' => true,
-        'showScriptName' => false,
-        'rules' => [
+            'enablePrettyUrl' => true,
+            'showScriptName' => false,
+            'rules' => [
 
-            //TRACKS
-            [
-                'class' => 'yii\rest\UrlRule',
-                'controller' => ['api/track'],
-                'pluralize' => false,
-                'extraPatterns' => [
-                    'GET search' => 'search',
-                    'GET latest' => 'latest',
-                    'GET trending' => 'trending',
-                    'POST {id}/like' => 'like',
-                    'DELETE {id}/like' => 'unlike',
+                //TRACKS
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => ['api/track'],
+                    'pluralize' => false,
+                    'extraPatterns' => [
+                        'GET search' => 'search',
+                        'GET latest' => 'latest',
+                        'GET trending' => 'trending',
+                        'POST {id}/like' => 'like',
+                        'DELETE {id}/like' => 'unlike',
+                    ],
                 ],
-            ],
 
-            /*
+                /*
             PLAYLISTS
             */
-            [
-                'class' => 'yii\rest\UrlRule',
-                'controller' => ['api/playlist'],
-                'pluralize' => false,
-                'extraPatterns' => [
-                    'GET {id}/tracks' => 'tracks',
-                    'POST {id}/tracks/{trackId}' => 'add-track',
-                    'DELETE {id}/tracks/{trackId}' => 'remove-track',
-                    'PUT {id}/tracks/reorder' => 'reorder',
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => ['api/playlist'],
+                    'pluralize' => false,
+                    'extraPatterns' => [
+                        'GET {id}/tracks' => 'tracks',
+                        'POST {id}/tracks/{trackId}' => 'add-track',
+                        'DELETE {id}/tracks/{trackId}' => 'remove-track',
+                        'PUT {id}/tracks/reorder' => 'reorder',
+                    ],
                 ],
-            ],
 
-            /*
+                /*
             ARTISTS
             */
-            [
-                'class' => 'yii\rest\UrlRule',
-                'controller' => ['api/artist'],
-                'pluralize' => false,
-                'extraPatterns' => [
-                    'GET {id}/tracks' => 'tracks',
-                    'GET {id}/albums' => 'albums',
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => ['api/artist'],
+                    'pluralize' => false,
+                    'extraPatterns' => [
+                        'GET {id}/tracks' => 'tracks',
+                        'GET {id}/albums' => 'albums',
+                    ],
                 ],
-            ],
 
-            /*
+                /*
             USERS
             */
-            [
-                'class' => 'yii\rest\UrlRule',
-                'controller' => ['api/user'],
-                'pluralize' => false,
-                'extraPatterns' => [
-                    'GET me' => 'me',
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => ['api/user'],
+                    'pluralize' => false,
+                    'extraPatterns' => [
+                        'GET me' => 'me',
+                    ],
                 ],
-            ],
 
-            //matematica
-            [
-                'class' => 'yii\rest\UrlRule',
-                'controller' => ['api/matematica'],
-                'pluralize' => false,
-                'extraPatterns' => [
-                    'GET raizdois' => 'raizdois',
+                //matematica
+                [
+                    'class' => 'yii\rest\UrlRule',
+                    'controller' => ['api/matematica'],
+                    'pluralize' => false,
+                    'extraPatterns' => [
+                        'GET raizdois' => 'raizdois',
+                    ],
                 ],
-            ],
 
+            ],
         ],
-    ],
 
-        
+
     ],
     'params' => $params,
 ];
