@@ -266,6 +266,23 @@ class Track extends ActiveRecord
         return (int)$this->getLikes()->count();
     }
 
+
+    public function fields()
+{
+    $fields = parent::fields();
+
+    $fields['audio_url'] = function() {
+        return $this->audioUrl;
+    };
+
+    $fields['cover_url'] = function() {
+        return $this->coverUrl;
+    };
+
+    return $fields;
+}
+
+
     public function afterSave($insert, $changedAttributes)
 {
     parent::afterSave($insert, $changedAttributes);
@@ -297,8 +314,8 @@ public function afterDelete()
 }
 
 public function FazPublishNoMosquitto($topic, $msg)
-{
-    $server = "172.22.21.227";
+{//"172.22.21.227"
+    $server = "127.0.0.1";
     $port = 1883;
     $client_id = "phpMQTT-publisher";
 

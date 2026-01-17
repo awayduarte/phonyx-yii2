@@ -21,6 +21,7 @@ class TrackController extends ActiveController
     public function behaviors()
     {
         $behaviors = parent::behaviors();
+
         $behaviors['authenticator'] = [
             'class' => HttpBearerAuth::class,
             'except' => ['index', 'view', 'search'],
@@ -43,8 +44,11 @@ class TrackController extends ActiveController
 
     public function actionIndex()
     {
+        
+        \Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+
         return new ActiveDataProvider([
-            'query' => $this->modelClass::find()->select(['id','title','artist_id','duration']),
+            'query' => $this->modelClass::find()->select(['id','title','artist_id','duration','album_id','genre_id','audio_asset_id']),
             'pagination' => ['pageSize' => 20],
         ]);
     }
@@ -60,7 +64,14 @@ class TrackController extends ActiveController
             throw new NotFoundHttpException('Track not found');
         }
 
-        return $track;
+        return [
+            'id' => $track->id,
+            'title' => $track->title,
+            'artist_id' => $track->artist_id,
+            'duration' => $track->duration,
+            'audio_url' => $track->audioUrl, // <-- AQUI ESTÁ A MÚSICA
+            'cover_url' => $track->coverUrl,
+        ];
     }
 
 
@@ -69,12 +80,14 @@ class TrackController extends ActiveController
     {
         $q = trim((string)$q);
 
-        return new ActiveDataProvider([
-            'query' => $this->modelClass::find()
-                ->select(['id','title','artist_id','duration'])
-                ->andFilterWhere(['like', 'title', $q]),
-            'pagination' => ['pageSize' => 20],
-        ]);
+return new ActiveDataProvider([
+    'query' => $this->modelClass::find()
+        ->select(['id','title','artist_id','duration'])
+        ->andFilterWhere(['like', 'title', $q])
+        ->with(['audioAsset']), // <-- importante
+    'pagination' => ['pageSize' => 20],
+]);
+
     }
 
 

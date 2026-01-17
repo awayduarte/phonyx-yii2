@@ -100,6 +100,17 @@ return [
                     'GET me' => 'me',
                 ],
             ],
+
+            //matematica
+            [
+                'class' => 'yii\rest\UrlRule',
+                'controller' => ['api/matematica'],
+                'pluralize' => false,
+                'extraPatterns' => [
+                    'GET raizdois' => 'raizdois',
+                ],
+            ],
+
         ],
     ],
 
