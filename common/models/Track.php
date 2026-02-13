@@ -267,20 +267,32 @@ class Track extends ActiveRecord
     }
 
 
-    public function fields()
+public function fields()
 {
     $fields = parent::fields();
 
-    $fields['audio_url'] = function() {
-        return $this->audioUrl;
-    };
+    $fields['audio_url'] = function () {
+        $url = $this->audioUrl;
 
-    $fields['cover_url'] = function() {
-        return $this->coverUrl;
+        if (!$url) {
+            return null;
+        }
+
+        // 1. Garante que começa como backend
+        $url = str_replace('/frontend/web', '/backend/web', $url);
+
+        // 2. Se for um track → força para frontend
+        if (strpos($url, '/uploads/tracks/') !== false) {
+            $url = str_replace('/backend/web', '/frontend/web', $url);
+        }
+
+        return $url;
     };
 
     return $fields;
 }
+
+
 
 
     public function afterSave($insert, $changedAttributes)

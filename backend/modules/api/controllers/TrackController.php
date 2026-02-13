@@ -49,7 +49,7 @@ class TrackController extends ActiveController
 
         return new ActiveDataProvider([
             'query' => $this->modelClass::find()->select(['id','title','artist_id','duration','album_id','genre_id','audio_asset_id']),
-            'pagination' => ['pageSize' => 20],
+            'pagination' => false,
         ]);
     }
 

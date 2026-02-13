@@ -161,6 +161,21 @@ class Playlist extends \yii\db\ActiveRecord
     }
 
 
+public function fields()
+{
+    return [
+        'id',
+        'title',
+        'description',
+        'user_id',
+        'coverUrl' => function () {
+            return $this->coverAsset
+                ? Yii::$app->request->hostInfo . '/' . $this->coverAsset->path
+                : null;
+        },
+    ];
+}
+
 
 
 

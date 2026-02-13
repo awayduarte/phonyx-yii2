@@ -71,14 +71,21 @@ return [
                     'class' => 'yii\rest\UrlRule',
                     'controller' => ['api/playlist'],
                     'pluralize' => false,
+                    'tokens' => [
+                        '{id}' => '<id:\d+>',
+                        '{trackId}' => '<trackId:\d+>',
+                    ],
                     'extraPatterns' => [
+                        'POST' => 'create',
                         'GET {id}/tracks' => 'tracks',
                         'POST {id}/tracks/{trackId}' => 'add-track',
                         'DELETE {id}/tracks/{trackId}' => 'remove-track',
                         'PUT {id}/tracks/reorder' => 'reorder',
+                        'GET my' => 'my',
                     ],
                 ],
 
+    
                 /*
             ARTISTS
             */
@@ -101,16 +108,6 @@ return [
                     'pluralize' => false,
                     'extraPatterns' => [
                         'GET me' => 'me',
-                    ],
-                ],
-
-                //matematica
-                [
-                    'class' => 'yii\rest\UrlRule',
-                    'controller' => ['api/matematica'],
-                    'pluralize' => false,
-                    'extraPatterns' => [
-                        'GET raizdois' => 'raizdois',
                     ],
                 ],
 

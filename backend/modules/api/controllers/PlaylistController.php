@@ -15,12 +15,72 @@ class PlaylistController extends ActiveController
 {
     public $modelClass = 'common\models\Playlist';
 
-    public function behaviors()
+    public function actions()
     {
-        $behaviors = parent::behaviors();
-        $behaviors['authenticator'] = ['class' => HttpBearerAuth::class];
-        return $behaviors;
+        $actions = parent::actions();
+        unset($actions['create'], $actions['update'], $actions['delete']);
+        return $actions;
     }
+
+
+public function behaviors()
+{
+    $behaviors = parent::behaviors();
+
+    $behaviors['authenticator'] = [
+        'class' => \yii\filters\auth\HttpBearerAuth::class,
+        'only' => ['my','tracks','add-track','remove-track','reorder','create','update','delete'],
+    ];
+
+    return $behaviors;
+}
+
+public function actionCreate()
+{
+    $playlist = new Playlist();
+    $playlist->load(Yii::$app->request->bodyParams, '');
+
+    // Forçar o user_id do token
+    $playlist->user_id = Yii::$app->user->id;
+
+    if ($playlist->save()) {
+        return [
+            'id' => $playlist->id,
+            'title' => $playlist->title,
+            'description' => $playlist->description,
+            'user_id' => $playlist->user_id,
+        ];
+    }
+
+    return [
+        'error' => true,
+        'messages' => $playlist->errors
+    ];
+}
+
+
+    public function actionUpdate($id)
+    {
+        $playlist = Playlist::findOne((int)$id);
+        $this->checkOwner($playlist);
+
+        $playlist->load(Yii::$app->request->bodyParams, '');
+        if ($playlist->save()) {
+            return $playlist;
+        }
+
+        return ['error' => $playlist->errors];
+    }
+
+    public function actionDelete($id)
+    {
+        $playlist = Playlist::findOne((int)$id);
+        $this->checkOwner($playlist);
+
+        $playlist->delete();
+        return ['success' => true];
+    }
+
 
     public function actionTracks($id)
     {
@@ -32,7 +92,6 @@ class PlaylistController extends ActiveController
         }
 
         $tracks = Track::find()
-            ->select(['track.id','track.title','track.artist_id','track.duration'])
             ->innerJoin('playlist_track pt', 'pt.track_id = track.id')
             ->where(['pt.playlist_id' => (int)$playlist->id])
             ->all();
@@ -105,6 +164,16 @@ class PlaylistController extends ActiveController
         $playlist->notifyReorder();
 
         return ['message' => 'Playlist reordered'];
+    }
+
+
+    public function actionMy()
+    {
+        
+        $user = Yii::$app->user->identity;       
+        return Playlist::find()
+            ->where(['user_id' => $user->id])
+            ->all();
     }
 
 
