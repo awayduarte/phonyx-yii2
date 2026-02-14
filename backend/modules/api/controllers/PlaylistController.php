@@ -169,17 +169,15 @@ public function actionCreate()
             throw new ForbiddenHttpException('Not allowed');
         }
 
-<<<<<<< HEAD
         $tracks = Track::find()
             ->innerJoin('playlist_track pt', 'pt.track_id = track.id')
-=======
+
         $rows = (new \yii\db\Query())
             ->from(['pt' => 'playlist_track'])
             ->innerJoin(['t' => 'track'], 't.id = pt.track_id')
             ->leftJoin(['g' => 'genre'], 'g.id = t.genre_id')
             ->leftJoin(['ac' => 'asset'], 'ac.id = t.audio_asset_id')
             ->leftJoin(['cc' => 'asset'], 'cc.id = t.cover_asset_id')
->>>>>>> 6715715 (Atualização API playlists, utilizadores e módulo matemática)
             ->where(['pt.playlist_id' => (int)$playlist->id])
             ->orderBy(['pt.position' => SORT_ASC, 'pt.id' => SORT_ASC])
             ->select([
