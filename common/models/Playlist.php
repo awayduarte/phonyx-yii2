@@ -124,7 +124,7 @@ class Playlist extends \yii\db\ActiveRecord
         $port = 1883;
         $client_id = "phpMQTT-playlist";
 
-        $mqtt = new \app\mosquitto\phpMQTT($server, $port, $client_id);
+        $mqtt = new \Bluerhinos\phpMQTT($server, $port, $client_id);
 
         if ($mqtt->connect(true, NULL, "", "")) {
             $mqtt->publish($topic, $msg, 0);

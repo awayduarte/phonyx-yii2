@@ -1,257 +1,280 @@
 <?php
 
-namespace backend\controllers;
+namespace backend\modules\api\controllers;
 
 use Yii;
+use yii\db\Query;
+use yii\filters\auth\HttpBearerAuth;
+use yii\filters\VerbFilter;
+use yii\rest\ActiveController;
+use yii\web\ForbiddenHttpException;
+use yii\web\NotFoundHttpException;
+use yii\web\Response;
+
 use common\models\Playlist;
 use common\models\PlaylistTrack;
-use common\models\Track;
-use backend\models\PlaylistSearch;
-use yii\data\ActiveDataProvider;
-use yii\web\Controller;
-use yii\web\NotFoundHttpException;
-use yii\filters\VerbFilter;
 
-/**
- * PlaylistController implements the CRUD actions for Playlist model.
- */
-class PlaylistController extends Controller
+class PlaylistController extends ActiveController
 {
-    /**
-     * {@inheritdoc}
-     */
+    public $modelClass = 'common\models\Playlist';
+
     public function behaviors()
     {
-        return array_merge(
-            parent::behaviors(),
-            [
-                'access' => [
-            'class' => \yii\filters\AccessControl::class,
-            'only' => ['like', 'unlike'],
-            'rules' => [
-                [
-                    'allow' => true,
-                    'roles' => ['@'],
-                ],
+        $behaviors = parent::behaviors();
+
+        $behaviors['authenticator'] = [
+            'class' => HttpBearerAuth::class,
+        ];
+
+        $behaviors['verbs'] = [
+            'class' => VerbFilter::class,
+            'actions' => [
+                'my' => ['GET'],
+                'tracks' => ['GET'],
+                'add-track' => ['POST'],
+                'remove-track' => ['DELETE', 'POST'],
+                'reorder' => ['PUT', 'POST'],
+                'ping' => ['GET'],
             ],
-        ],
-                'verbs' => [
-                    'class' => VerbFilter::class,
-                    'actions' => [
-                        'delete' => ['POST'],
-                        'add-track' => ['POST'],
-                        'remove-track' => ['POST'],
-                    ],
-                ],
-            ]
-        );
+        ];
+
+        return $behaviors;
     }
 
-    /**
-     * Lists all Playlist models.
-     */
-    public function actionIndex()
+    private function baseUrl(): string
     {
-        $searchModel = new PlaylistSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
-
-        return $this->render('index', [
-            'searchModel'  => $searchModel,
-            'dataProvider' => $dataProvider,
-        ]);
+        return rtrim(Yii::$app->request->hostInfo . Yii::$app->request->baseUrl, '/');
     }
 
-    /**
-     * Displays a single Playlist model.
-     */
-    public function actionView($id)
+    private function toAbsUrl($path): string
     {
-        return $this->render('view', [
-            'model' => $this->findModel($id),
-        ]);
+        if ($path === null) return '';
+        $path = trim((string)$path);
+        if ($path === '') return '';
+        if (preg_match('~^https?://~i', $path)) return $path;
+        return $this->baseUrl() . '/' . ltrim($path, '/');
     }
 
-    /**
-     * Creates a new Playlist model.
-     */
-    public function actionCreate()
+    private function normalizeGenre($val): string
     {
-        $model = new Playlist();
+        if ($val === null) return 'Outros';
 
-        if ($model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+       
+        if (is_string($val)) {
+            $s = trim($val);
+            return $s !== '' ? $s : 'Outros';
         }
 
-        return $this->render('create', [
-            'model' => $model,
-        ]);
-    }
-
-    /**
-     * Updates an existing Playlist model.
-     */
-    public function actionUpdate($id)
-    {
-        $model = $this->findModel($id);
-
-        if ($model->load($this->request->post()) && $model->save()) {
-            return $this->redirect(['view', 'id' => $model->id]);
+       
+        if (is_array($val)) {
+            if (!empty($val['name'])) return (string)$val['name'];
+            if (!empty($val['title'])) return (string)$val['title'];
+            return 'Outros';
         }
 
-        return $this->render('update', [
-            'model' => $model,
-        ]);
+        
+        if (is_object($val)) {
+            if (isset($val->name) && $val->name) return (string)$val->name;
+            if (isset($val->title) && $val->title) return (string)$val->title;
+
+           
+            if (method_exists($val, '__toString')) return (string)$val;
+            return 'Outros';
+        }
+
+        return 'Outros';
     }
 
-    /**
-     * Deletes an existing Playlist model.
-     */
-    public function actionDelete($id)
-    {
-        $this->findModel($id)->delete();
-        return $this->redirect(['index']);
-    }
-
-    /**
-     * Shows tracks inside a playlist.
-     */
     public function actionTracks($id)
+{
+    $playlist = \common\models\Playlist::findOne((int)$id);
+    if (!$playlist) {
+        throw new \yii\web\NotFoundHttpException('Playlist not found');
+    }
+
+    if ((int)$playlist->user_id !== (int)\Yii::$app->user->id) {
+        throw new \yii\web\ForbiddenHttpException('Not allowed');
+    }
+
+    
+    $rows = (new \yii\db\Query())
+        ->from(['pt' => 'playlist_track'])
+        ->innerJoin(['t' => 'track'], 't.id = pt.track_id')
+        ->leftJoin(['g' => 'genre'], 'g.id = t.genre_id')
+        ->leftJoin(['aa' => 'asset'], 'aa.id = t.audio_asset_id')
+        ->leftJoin(['ca' => 'asset'], 'ca.id = t.cover_asset_id')
+        ->where(['pt.playlist_id' => (int)$playlist->id])
+        ->orderBy(['pt.position' => SORT_ASC, 'pt.id' => SORT_ASC])
+        ->select([
+            'id' => 't.id',
+            'title' => 't.title',
+            'duration' => 't.duration',
+            'genre_name' => 'g.name',
+            'genre_title' => 'g.title',
+            'audio_path' => 'aa.path',
+            'cover_path' => 'ca.path',
+        ])
+        ->all();
+
+    $base = rtrim(\Yii::$app->request->hostInfo . \Yii::$app->request->baseUrl, '/');
+
+    $toAbs = function($path) use ($base) {
+        if ($path === null) return '';
+        $path = trim((string)$path);
+        if ($path === '') return '';
+        if (preg_match('~^https?://~i', $path)) return $path;
+        return $base . '/' . ltrim($path, '/');
+    };
+
+    $out = [];
+    foreach ($rows as $r) {
+        $genre = $r['genre_name'] ?? $r['genre_title'] ?? 'Outros';
+        $genre = trim((string)$genre);
+        if ($genre === '') $genre = 'Outros';
+
+        $out[] = [
+            'id' => (int)($r['id'] ?? 0),
+            'title' => (string)($r['title'] ?? ''),
+            'duration' => (int)($r['duration'] ?? 0),
+            'genre' => $genre,                // ✅ sempre string
+            'audio_url' => $toAbs($r['audio_path'] ?? ''),
+            'cover_url' => $toAbs($r['cover_path'] ?? ''),
+        ];
+    }
+
+    return $out;
+}
+
+    public function actionMy()
     {
-        $playlist = $this->findModel($id);
+        Yii::$app->response->format = Response::FORMAT_JSON;
 
-        $dataProvider = new ActiveDataProvider([
-            'query' => PlaylistTrack::find()
-                ->where(['playlist_id' => $playlist->id])
-                ->with(['track.artist'])
-                ->orderBy(['position' => SORT_ASC]),
-            'pagination' => false,
-        ]);
+        $userId = (int)Yii::$app->user->id;
+        if ($userId <= 0) {
+            Yii::$app->response->statusCode = 401;
+            return ['ok' => false, 'error' => 'Not authenticated'];
+        }
 
-        // tracks that are NOT in playlist (for add dropdown)
-        $availableTracks = Track::find()
-            ->where([
-                'not in',
-                'id',
-                PlaylistTrack::find()
-                    ->select('track_id')
-                    ->where(['playlist_id' => $playlist->id])
-            ])
+        $playlists = Playlist::find()
+            ->where(['user_id' => $userId])
+            ->orderBy(['id' => SORT_DESC])
             ->all();
 
-        return $this->render('tracks', [
-            'playlist'        => $playlist,
-            'dataProvider'    => $dataProvider,
-            'availableTracks' => $availableTracks,
-        ]);
+        $out = [];
+        foreach ($playlists as $p) {
+            $name = '';
+            if (isset($p->title) && $p->title !== null) $name = (string)$p->title;
+            else if (isset($p->name) && $p->name !== null) $name = (string)$p->name;
+
+            $coverPath = '';
+            if (isset($p->coverAsset) && $p->coverAsset && !empty($p->coverAsset->path)) {
+                $coverPath = (string)$p->coverAsset->path;
+            } elseif (isset($p->cover_url) && !empty($p->cover_url)) {
+                $coverPath = (string)$p->cover_url;
+            }
+
+            $out[] = [
+                'id' => (int)$p->id,
+                'name' => $name,
+                'cover_url' => $this->toAbsUrl($coverPath),
+            ];
+        }
+
+        return $out;
     }
 
-    /**
-     * Adds a track to playlist.
-     */
-    public function actionAddTrack($id)
+    public function actionAddTrack($id, $trackId)
     {
-        $playlist = $this->findModel($id);
-        $trackId = Yii::$app->request->post('track_id');
+        Yii::$app->response->format = Response::FORMAT_JSON;
 
-        if (!$trackId || !Track::find()->where(['id' => $trackId])->exists()) {
-            throw new NotFoundHttpException('Track not found.');
+        $playlist = Playlist::findOne((int)$id);
+        if (!$playlist) throw new NotFoundHttpException('Playlist not found');
+
+        if ((int)$playlist->user_id !== (int)Yii::$app->user->id) {
+            throw new ForbiddenHttpException('Not allowed');
         }
 
         $exists = PlaylistTrack::find()
-            ->where(['playlist_id' => $playlist->id, 'track_id' => $trackId])
+            ->where(['playlist_id' => (int)$playlist->id, 'track_id' => (int)$trackId])
             ->exists();
 
         if (!$exists) {
-            $position = PlaylistTrack::find()
-                ->where(['playlist_id' => $playlist->id])
-                ->max('position');
+            $pt = new PlaylistTrack();
+            $pt->playlist_id = (int)$playlist->id;
+            $pt->track_id = (int)$trackId;
 
-            $pivot = new PlaylistTrack();
-            $pivot->playlist_id = $playlist->id;
-            $pivot->track_id = $trackId;
-            $pivot->position = $position !== null ? $position + 1 : 1;
-            $pivot->save(false);
+            if ($pt->hasAttribute('position')) {
+                $maxPos = (new Query())
+                    ->from('playlist_track')
+                    ->where(['playlist_id' => (int)$playlist->id])
+                    ->max('position');
+                $pt->position = ((int)$maxPos) + 1;
+            }
+
+            $pt->save(false);
         }
 
-        return $this->redirect(['tracks', 'id' => $playlist->id]);
+        return ['ok' => true];
     }
 
-    /**
-     * Removes a track from playlist.
-     */
-    public function actionRemoveTrack($id, $track_id)
+    public function actionRemoveTrack($id, $trackId)
     {
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $playlist = Playlist::findOne((int)$id);
+        if (!$playlist) throw new NotFoundHttpException('Playlist not found');
+
+        if ((int)$playlist->user_id !== (int)Yii::$app->user->id) {
+            throw new ForbiddenHttpException('Not allowed');
+        }
+
         PlaylistTrack::deleteAll([
-            'playlist_id' => $id,
-            'track_id' => $track_id,
+            'playlist_id' => (int)$playlist->id,
+            'track_id' => (int)$trackId,
         ]);
 
-        return $this->redirect(['tracks', 'id' => $id]);
+        return ['ok' => true];
     }
 
-    /**
-     * Finds the Playlist model based on its primary key value.
-     */
-    protected function findModel($id)
+    public function actionReorder($id)
     {
-        if (($model = Playlist::findOne($id)) !== null) {
-            return $model;
+        Yii::$app->response->format = Response::FORMAT_JSON;
+
+        $playlist = Playlist::findOne((int)$id);
+        if (!$playlist) throw new NotFoundHttpException('Playlist not found');
+
+        if ((int)$playlist->user_id !== (int)Yii::$app->user->id) {
+            throw new ForbiddenHttpException('Not allowed');
         }
 
-        throw new NotFoundHttpException('The requested page does not exist.');
+        $items = Yii::$app->request->bodyParams;
+        if (!is_array($items)) {
+            Yii::$app->response->statusCode = 400;
+            return ['ok' => false, 'error' => 'Invalid body'];
+        }
+
+        foreach ($items as $item) {
+            $trackId = isset($item['track_id']) ? (int)$item['track_id'] : 0;
+            $pos = isset($item['position']) ? (int)$item['position'] : 0;
+            if ($trackId <= 0) continue;
+
+            PlaylistTrack::updateAll(
+                ['position' => $pos],
+                ['playlist_id' => (int)$playlist->id, 'track_id' => $trackId]
+            );
+        }
+
+        return ['ok' => true];
     }
 
-    public function actionLike($id)
-{
-    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
+    public function actionPing()
+    {
+        Yii::$app->response->format = Response::FORMAT_JSON;
 
-    $playlistId = (int)$id;
-    $userId = (int)Yii::$app->user->id;
-
-    // Basic existence check
-    if (!\common\models\Playlist::find()->where(['id' => $playlistId])->exists()) {
-        return ['ok' => false, 'message' => 'Playlist not found'];
+        return [
+            'ok' => true,
+            'user_id' => (int)Yii::$app->user->id,
+            'time' => date('c'),
+        ];
     }
-
-    $exists = (new \yii\db\Query())
-        ->from('{{%playlist_like}}')
-        ->where(['playlist_id' => $playlistId, 'user_id' => $userId])
-        ->exists();
-
-    if (!$exists) {
-        Yii::$app->db->createCommand()->insert('{{%playlist_like}}', [
-            'playlist_id' => $playlistId,
-            'user_id' => $userId,
-            'created_at' => new \yii\db\Expression('CURRENT_TIMESTAMP'),
-        ])->execute();
-    }
-
-    $count = (int)(new \yii\db\Query())
-        ->from('{{%playlist_like}}')
-        ->where(['playlist_id' => $playlistId])
-        ->count();
-
-    return ['ok' => true, 'liked' => true, 'count' => $count];
-}
-
-public function actionUnlike($id)
-{
-    Yii::$app->response->format = \yii\web\Response::FORMAT_JSON;
-
-    $playlistId = (int)$id;
-    $userId = (int)Yii::$app->user->id;
-
-    Yii::$app->db->createCommand()->delete('{{%playlist_like}}', [
-        'playlist_id' => $playlistId,
-        'user_id' => $userId,
-    ])->execute();
-
-    $count = (int)(new \yii\db\Query())
-        ->from('{{%playlist_like}}')
-        ->where(['playlist_id' => $playlistId])
-        ->count();
-
-    return ['ok' => true, 'liked' => false, 'count' => $count];
-}
-
 }
