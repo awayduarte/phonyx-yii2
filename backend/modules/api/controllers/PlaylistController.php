@@ -70,35 +70,11 @@ class PlaylistController extends ActiveController
 
     public function actionMy()
     {
-        $userId = (int)Yii::$app->user->id;
-        if ($userId <= 0) {
-            Yii::$app->response->statusCode = 401;
-            return ['message' => 'Não autenticado'];
-        }
-
-        // Podes devolver só o necessário (mais leve para Android)
-        $base = Yii::$app->request->hostInfo . Yii::$app->request->baseUrl;
-
-        $playlists = Playlist::find()
-            ->where(['user_id' => $userId])
-            ->orderBy(['id' => SORT_DESC])
+        
+        $user = Yii::$app->user->identity;       
+        return Playlist::find()
+            ->where(['user_id' => $user->id])
             ->all();
-
-        $out = [];
-        foreach ($playlists as $p) {
-            $cover = $p->cover_url ?? null;
-            if ($cover && !preg_match('~^https?://~i', $cover)) {
-                $cover = rtrim($base, '/') . '/' . ltrim($cover, '/');
-            }
-
-            $out[] = [
-                'id' => (int)$p->id,
-                'name' => (string)($p->name ?? $p->title ?? ''),
-                'cover_url' => $cover ?: '',
-            ];
-        }
-
-        return $out;
     }
 
     public function actionCreate()
