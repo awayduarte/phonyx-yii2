@@ -84,7 +84,7 @@ return [
 
                         'POST' => 'create',
 
-                        'GET my' => 'my',
+                        'GET mine' => 'my',
                         'GET ping' => 'ping',
                         'GET {id}/tracks' => 'tracks',
                         'POST {id}/tracks/{trackId}' => 'add-track',
