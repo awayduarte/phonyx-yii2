@@ -81,30 +81,25 @@ return [
                         '{trackId}' => '<trackId:\d+>',
                     ],
                     'extraPatterns' => [
-<<<<<<< HEAD
+
                         'POST' => 'create',
-=======
+
                         'GET my' => 'my',
                         'GET ping' => 'ping',
-
-                       
->>>>>>> 6715715 (Atualização API playlists, utilizadores e módulo matemática)
                         'GET {id}/tracks' => 'tracks',
                         'POST {id}/tracks/{trackId}' => 'add-track',
                         'DELETE {id}/tracks/{trackId}' => 'remove-track',
                         'PUT {id}/tracks/reorder' => 'reorder',
-                        'GET my' => 'my',
                     ],
                 ],
 
-<<<<<<< HEAD
+
     
                 /*
             ARTISTS
             */
-=======
+
                 // ARTISTS
->>>>>>> 6715715 (Atualização API playlists, utilizadores e módulo matemática)
                 [
                     'class' => \yii\rest\UrlRule::class,
                     'controller' => ['api/artist'],
@@ -126,8 +121,7 @@ return [
                     ],
                 ],
 
-<<<<<<< HEAD
-=======
+
                 // MATEMATICA
                 [
                     'class' => \yii\rest\UrlRule::class,
@@ -137,7 +131,6 @@ return [
                         'GET raizdois' => 'raizdois',
                     ],
                 ],
->>>>>>> 6715715 (Atualização API playlists, utilizadores e módulo matemática)
             ],
         ],
     ],
