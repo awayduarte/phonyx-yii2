@@ -1,5 +1,4 @@
 <?php
-
 $params = array_merge(
     require __DIR__ . '/../../common/config/params.php',
     require __DIR__ . '/../../common/config/params-local.php',
@@ -12,13 +11,11 @@ return [
     'basePath' => dirname(__DIR__),
     'controllerNamespace' => 'backend\controllers',
     'bootstrap' => ['log'],
-
     'modules' => [
         'api' => [
             'class' => 'backend\modules\api\Module',
         ],
     ],
-
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-backend',
@@ -26,17 +23,15 @@ return [
                 'application/json' => 'yii\web\JsonParser',
             ],
         ],
-
         'user' => [
             'identityClass' => 'common\models\User',
             'enableAutoLogin' => true,
             'identityCookie' => ['name' => '_identity-backend', 'httpOnly' => true],
         ],
-
         'session' => [
+
             'name' => 'advanced-backend',
         ],
-
         'log' => [
             'traceLevel' => YII_DEBUG ? 3 : 0,
             'targets' => [
@@ -46,20 +41,18 @@ return [
                 ],
             ],
         ],
-
         'errorHandler' => [
             'errorAction' => 'site/error',
         ],
 
-        
         'urlManager' => [
             'enablePrettyUrl' => true,
             'showScriptName' => false,
             'rules' => [
 
-                // TRACKS
+                //TRACKS
                 [
-                    'class' => \yii\rest\UrlRule::class,
+                    'class' => 'yii\rest\UrlRule',
                     'controller' => ['api/track'],
                     'pluralize' => false,
                     'extraPatterns' => [
@@ -71,9 +64,11 @@ return [
                     ],
                 ],
 
-                // PLAYLISTS
+                /*
+            PLAYLISTS
+            */
                 [
-                    'class' => \yii\rest\UrlRule::class,
+                    'class' => 'yii\rest\UrlRule',
                     'controller' => ['api/playlist'],
                     'pluralize' => false,
                     'tokens' => [
@@ -81,27 +76,21 @@ return [
                         '{trackId}' => '<trackId:\d+>',
                     ],
                     'extraPatterns' => [
-
                         'POST' => 'create',
-
-                        'GET mine' => 'my',
-                        'GET ping' => 'ping',
                         'GET {id}/tracks' => 'tracks',
                         'POST {id}/tracks/{trackId}' => 'add-track',
                         'DELETE {id}/tracks/{trackId}' => 'remove-track',
                         'PUT {id}/tracks/reorder' => 'reorder',
+                        'GET my' => 'my',
                     ],
                 ],
-
 
     
                 /*
             ARTISTS
             */
-
-                // ARTISTS
                 [
-                    'class' => \yii\rest\UrlRule::class,
+                    'class' => 'yii\rest\UrlRule',
                     'controller' => ['api/artist'],
                     'pluralize' => false,
                     'extraPatterns' => [
@@ -110,30 +99,22 @@ return [
                     ],
                 ],
 
-                // USERS
+                /*
+            USERS
+            */
                 [
-                    'class' => \yii\rest\UrlRule::class,
+                    'class' => 'yii\rest\UrlRule',
                     'controller' => ['api/user'],
                     'pluralize' => false,
                     'extraPatterns' => [
                         'GET me' => 'me',
-                      
                     ],
                 ],
 
-
-                // MATEMATICA
-                [
-                    'class' => \yii\rest\UrlRule::class,
-                    'controller' => ['api/matematica'],
-                    'pluralize' => false,
-                    'extraPatterns' => [
-                        'GET raizdois' => 'raizdois',
-                    ],
-                ],
             ],
         ],
-    ],
 
+
+    ],
     'params' => $params,
 ];
