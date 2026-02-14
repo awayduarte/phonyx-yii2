@@ -8,9 +8,9 @@ use yii\filters\auth\HttpBearerAuth;
 use yii\filters\VerbFilter;
 use yii\web\ForbiddenHttpException;
 use yii\web\NotFoundHttpException;
-use yii\web\UnprocessableEntityHttpException;
 use common\models\Playlist;
 use common\models\PlaylistTrack;
+use common\models\Track;
 
 class PlaylistController extends ActiveController
 {
@@ -18,79 +18,26 @@ class PlaylistController extends ActiveController
 
     public function actions()
     {
-<<<<<<< HEAD
         $actions = parent::actions();
+        // Vamos usar actions custom para create/update/delete
         unset($actions['create'], $actions['update'], $actions['delete']);
         return $actions;
     }
 
-
-public function behaviors()
-{
-    $behaviors = parent::behaviors();
-
-    $behaviors['authenticator'] = [
-        'class' => \yii\filters\auth\HttpBearerAuth::class,
-        'only' => ['my','tracks','add-track','remove-track','reorder','create','update','delete'],
-    ];
-
-    return $behaviors;
-}
-
-public function actionCreate()
-{
-    $playlist = new Playlist();
-    $playlist->load(Yii::$app->request->bodyParams, '');
-
-    // Forçar o user_id do token
-    $playlist->user_id = Yii::$app->user->id;
-
-    if ($playlist->save()) {
-        return [
-            'id' => $playlist->id,
-            'title' => $playlist->title,
-            'description' => $playlist->description,
-            'user_id' => $playlist->user_id,
-        ];
-    }
-
-    return [
-        'error' => true,
-        'messages' => $playlist->errors
-    ];
-}
-
-
-    public function actionUpdate($id)
+    public function behaviors()
     {
-        $playlist = Playlist::findOne((int)$id);
-        $this->checkOwner($playlist);
-
-        $playlist->load(Yii::$app->request->bodyParams, '');
-        if ($playlist->save()) {
-            return $playlist;
-        }
-
-        return ['error' => $playlist->errors];
-    }
-
-    public function actionDelete($id)
-    {
-        $playlist = Playlist::findOne((int)$id);
-        $this->checkOwner($playlist);
-
-        $playlist->delete();
-        return ['success' => true];
-    }
-
-
-=======
         $behaviors = parent::behaviors();
 
+        // Auth por Bearer token
         $behaviors['authenticator'] = [
             'class' => HttpBearerAuth::class,
+            'only' => [
+                'my', 'tracks', 'add-track', 'remove-track', 'reorder',
+                'create', 'update', 'delete', 'ping',
+            ],
         ];
 
+        // Verbos permitidos por endpoint
         $behaviors['verbs'] = [
             'class' => VerbFilter::class,
             'actions' => [
@@ -112,26 +59,58 @@ public function actionCreate()
         return $behaviors;
     }
 
-    // ✅ IMPORTANTE: substitui o create default para meter user_id e aceitar title/name
-    public function actions()
+    public function actionPing()
     {
-        $actions = parent::actions();
-        unset($actions['create']);
-        return $actions;
+        return [
+            'ok' => true,
+            'user_id' => (int)Yii::$app->user->id,
+            'time' => date('c'),
+        ];
+    }
+
+    public function actionMy()
+    {
+        $userId = (int)Yii::$app->user->id;
+        if ($userId <= 0) {
+            Yii::$app->response->statusCode = 401;
+            return ['message' => 'Não autenticado'];
+        }
+
+        // Podes devolver só o necessário (mais leve para Android)
+        $base = Yii::$app->request->hostInfo . Yii::$app->request->baseUrl;
+
+        $playlists = Playlist::find()
+            ->where(['user_id' => $userId])
+            ->orderBy(['id' => SORT_DESC])
+            ->all();
+
+        $out = [];
+        foreach ($playlists as $p) {
+            $cover = $p->cover_url ?? null;
+            if ($cover && !preg_match('~^https?://~i', $cover)) {
+                $cover = rtrim($base, '/') . '/' . ltrim($cover, '/');
+            }
+
+            $out[] = [
+                'id' => (int)$p->id,
+                'name' => (string)($p->name ?? $p->title ?? ''),
+                'cover_url' => $cover ?: '',
+            ];
+        }
+
+        return $out;
     }
 
     public function actionCreate()
     {
         $userId = (int)Yii::$app->user->id;
         if ($userId <= 0) {
-            throw new ForbiddenHttpException('Not authenticated');
+            throw new ForbiddenHttpException('Não autenticado');
         }
 
         $data = Yii::$app->request->bodyParams;
 
-        $model = new Playlist();
-
-        // aceita "title" ou "name"
+        // Aceita "title" ou "name"
         if (empty($data['title']) && !empty($data['name'])) {
             $data['title'] = $data['name'];
         }
@@ -139,38 +118,74 @@ public function actionCreate()
             $data['name'] = $data['title'];
         }
 
-        // força user_id do token
-        $data['user_id'] = $userId;
-
+        $model = new Playlist();
         $model->load($data, '');
+
+        // Força sempre o user_id do token
+        $model->user_id = $userId;
 
         if ($model->save()) {
             Yii::$app->response->statusCode = 201;
             return $model;
         }
 
-        // devolve 422 com erros detalhados
         Yii::$app->response->statusCode = 422;
         return [
-            'message' => 'Validation failed',
+            'message' => 'Falha de validação',
             'errors' => $model->errors,
         ];
     }
 
->>>>>>> 6715715 (Atualização API playlists, utilizadores e módulo matemática)
+    public function actionUpdate($id)
+    {
+        $playlist = Playlist::findOne((int)$id);
+        if (!$playlist) {
+            throw new NotFoundHttpException('Playlist não encontrada');
+        }
+        $this->checkOwner($playlist);
+
+        $data = Yii::$app->request->bodyParams;
+
+        // Aceita "title" ou "name"
+        if (empty($data['title']) && !empty($data['name'])) {
+            $data['title'] = $data['name'];
+        }
+        if (empty($data['name']) && !empty($data['title'])) {
+            $data['name'] = $data['title'];
+        }
+
+        $playlist->load($data, '');
+
+        if ($playlist->save()) {
+            return $playlist;
+        }
+
+        Yii::$app->response->statusCode = 422;
+        return [
+            'message' => 'Falha de validação',
+            'errors' => $playlist->errors,
+        ];
+    }
+
+    public function actionDelete($id)
+    {
+        $playlist = Playlist::findOne((int)$id);
+        if (!$playlist) {
+            throw new NotFoundHttpException('Playlist não encontrada');
+        }
+        $this->checkOwner($playlist);
+
+        $playlist->delete();
+        return ['success' => true];
+    }
+
     public function actionTracks($id)
     {
         $playlist = Playlist::findOne((int)$id);
         if (!$playlist) {
-            throw new NotFoundHttpException('Playlist not found');
+            throw new NotFoundHttpException('Playlist não encontrada');
         }
-
-        if ((int)$playlist->user_id !== (int)Yii::$app->user->id) {
-            throw new ForbiddenHttpException('Not allowed');
-        }
-
-        $tracks = Track::find()
-            ->innerJoin('playlist_track pt', 'pt.track_id = track.id')
+        $this->checkOwner($playlist);
 
         $rows = (new \yii\db\Query())
             ->from(['pt' => 'playlist_track'])
@@ -187,50 +202,20 @@ public function actionCreate()
                 'genre' => 'COALESCE(g.name, g.title, "Outros")',
                 'audio_url' => 'ac.path',
                 'cover_url' => 'cc.path',
+                'position' => 'pt.position',
             ])
             ->all();
 
         $out = [];
         foreach ($rows as $r) {
             $out[] = [
-                'id' => (int)($r['id'] ?? 0),
+                'id' => (int)$r['id'],
                 'title' => (string)($r['title'] ?? ''),
                 'duration' => (int)($r['duration'] ?? 0),
                 'genre' => (string)($r['genre'] ?? 'Outros'),
                 'audio_url' => $r['audio_url'] ? (string)$r['audio_url'] : '',
                 'cover_url' => $r['cover_url'] ? (string)$r['cover_url'] : '',
-            ];
-        }
-
-        return $out;
-    }
-
-    public function actionMy()
-    {
-        $userId = (int)Yii::$app->user->id;
-        if ($userId <= 0) {
-            Yii::$app->response->statusCode = 401;
-            return ['message' => 'Not authenticated'];
-        }
-
-        $playlists = Playlist::find()
-            ->where(['user_id' => $userId])
-            ->orderBy(['id' => SORT_DESC])
-            ->all();
-
-        $base = Yii::$app->request->hostInfo . Yii::$app->request->baseUrl;
-
-        $out = [];
-        foreach ($playlists as $p) {
-            $cover = $p->cover_url ?? null;
-            if ($cover && !preg_match('~^https?://~i', $cover)) {
-                $cover = rtrim($base, '/') . '/' . ltrim($cover, '/');
-            }
-
-            $out[] = [
-                'id' => (int)$p->id,
-                'name' => (string)($p->name ?? $p->title ?? ''),
-                'cover_url' => $cover,
+                'position' => isset($r['position']) ? (int)$r['position'] : 0,
             ];
         }
 
@@ -240,10 +225,14 @@ public function actionCreate()
     public function actionAddTrack($id, $trackId)
     {
         $playlist = Playlist::findOne((int)$id);
-        if (!$playlist) throw new NotFoundHttpException('Playlist not found');
+        if (!$playlist) {
+            throw new NotFoundHttpException('Playlist não encontrada');
+        }
+        $this->checkOwner($playlist);
 
-        if ((int)$playlist->user_id !== (int)Yii::$app->user->id) {
-            throw new ForbiddenHttpException('Not allowed');
+        $track = Track::findOne((int)$trackId);
+        if (!$track) {
+            throw new NotFoundHttpException('Track não encontrada');
         }
 
         $exists = (new \yii\db\Query())
@@ -255,6 +244,8 @@ public function actionCreate()
             Yii::$app->db->createCommand()->insert('playlist_track', [
                 'playlist_id' => (int)$playlist->id,
                 'track_id' => (int)$trackId,
+                // se tiveres position NOT NULL na BD, convém definir:
+                // 'position' => (int)($this->nextPosition($playlist->id)),
             ])->execute();
         }
 
@@ -263,6 +254,12 @@ public function actionCreate()
 
     public function actionRemoveTrack($id, $trackId)
     {
+        $playlist = Playlist::findOne((int)$id);
+        if (!$playlist) {
+            throw new NotFoundHttpException('Playlist não encontrada');
+        }
+        $this->checkOwner($playlist);
+
         PlaylistTrack::deleteAll([
             'playlist_id' => (int)$id,
             'track_id' => (int)$trackId,
@@ -273,9 +270,22 @@ public function actionCreate()
 
     public function actionReorder($id)
     {
+        $playlist = Playlist::findOne((int)$id);
+        if (!$playlist) {
+            throw new NotFoundHttpException('Playlist não encontrada');
+        }
+        $this->checkOwner($playlist);
+
         $items = Yii::$app->request->bodyParams;
+        if (!is_array($items)) {
+            Yii::$app->response->statusCode = 422;
+            return ['message' => 'Formato inválido (esperado array)'];
+        }
 
         foreach ($items as $item) {
+            if (!isset($item['track_id'], $item['position'])) {
+                continue;
+            }
             PlaylistTrack::updateAll(
                 ['position' => (int)$item['position']],
                 [
@@ -288,29 +298,19 @@ public function actionCreate()
         return ['ok' => true];
     }
 
-<<<<<<< HEAD
-
-    public function actionMy()
+    private function checkOwner($playlist): void
     {
-        
-        $user = Yii::$app->user->identity;       
-        return Playlist::find()
-            ->where(['user_id' => $user->id])
-            ->all();
-    }
+        if (!$playlist) {
+            throw new NotFoundHttpException('Playlist não encontrada');
+        }
 
+        $uid = (int)Yii::$app->user->id;
+        if ($uid <= 0) {
+            throw new ForbiddenHttpException('Não autenticado');
+        }
 
-
-
-    private function checkOwner($playlist)
-=======
-    public function actionPing()
->>>>>>> 6715715 (Atualização API playlists, utilizadores e módulo matemática)
-    {
-        return [
-            'ok' => true,
-            'user_id' => (int)Yii::$app->user->id,
-            'time' => date('c'),
-        ];
+        if ((int)$playlist->user_id !== $uid) {
+            throw new ForbiddenHttpException('Sem permissões');
+        }
     }
 }
