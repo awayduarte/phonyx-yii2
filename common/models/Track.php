@@ -326,8 +326,8 @@ public function afterDelete()
 }
 
 public function FazPublishNoMosquitto($topic, $msg)
-{//"172.22.21.227"
-    $server = "127.0.0.1";
+{//"127.0.0.1"
+    $server = "172.22.21.227";
     $port = 1883;
     $client_id = "phpMQTT-publisher";
 
